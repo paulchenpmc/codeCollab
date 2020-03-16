@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import { Link } from 'react-router-dom';
 
 function Homepage() {
   return (
@@ -10,6 +11,11 @@ function Homepage() {
         <p>
           Main page
         </p>
+        <Link to="/editor">
+          <button variant="outlined">
+            Editor
+          </button>
+        </Link>
       </header>
     </div>
   );
