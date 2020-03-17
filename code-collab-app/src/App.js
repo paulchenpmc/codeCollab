@@ -1,13 +1,14 @@
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
-import Home from './homepage';
-import Editor from './editorpage';
+import Homepage from './homepage';
+import Editorpage from './editorpage';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
     <Switch>
-      <Route exact path='/' component={Home}></Route>
-      <Route exact path='/editor' component={Editor}></Route>
+      <Route exact path='/' component={Homepage}></Route>
+      <Route exact path='/editor' component={Editorpage}></Route>
     </Switch>
   );
 }
