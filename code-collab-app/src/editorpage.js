@@ -3,6 +3,8 @@ import './App.css';
 import { Link } from 'react-router-dom';
 import TextField from '@material-ui/core/TextField';
 import { withStyles } from "@material-ui/core/styles";
+import logo from './codeCollabLogo.png';
+import './App.css';
 
 const styles = {
   root: {
@@ -19,26 +21,24 @@ function Editorpage(props) {
   return (
     <div className="App">
       <header className="App-header">
-        <Link to="/">
-          <button variant="outlined">
-            Home
-          </button>
-        </Link>
-      <TextField
-          className={classes.root}
-          InputProps={{
-            className: classes.input
-          }}
-          id="outlined-multiline-static"
-          label="Editor"
-          multiline
-          fullWidth
-          fullHeight
-          rows="27"
-          defaultValue='print("Hello World!")'
-          variant="filled"
-      />
+        <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>
       </header>
+      <body className="App-editor">
+        <TextField
+            className={classes.root}
+            InputProps={{
+              className: classes.input
+            }}
+            id="outlined-multiline-static"
+            label="Editor"
+            multiline
+            fullWidth
+            fullHeight
+            rows="27"
+            defaultValue='print("Hello World!")'
+            variant="filled"
+        />
+      </body>
     </div>
   );
 }

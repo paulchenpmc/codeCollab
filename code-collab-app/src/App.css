@@ -48,6 +48,17 @@ h1.subheading {
   color: white;
 }
 
+.App-editor {
+  background-color: #656669;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
 .App-link {
   color: #61dafb;
 }
