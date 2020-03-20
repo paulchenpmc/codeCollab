@@ -1,29 +1,19 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const { ExpressPeerServer } = require('peer');
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 
-app.get('/', (req, res, next) => { 
-    console.log('GET /')
-    res.send('Tracker Online!'); 
+let session_list = ['test1', 'test2', 'test3'];
+
+io.on("connection", function(socket) {
+
+    socket.emit("session_list", JSON.stringify(session_list));
+
+    socket.on("disconnect", function() {
+        console.log("client disconnected");
+    });
 });
 
-const server = app.listen(9000);
-
-const options = {
-    debug: true,
-    path: '/peerjs'
-}
-
-const peerserver = ExpressPeerServer(server, options);
-
-app.use(options.path, peerserver);
-
-peerserver.on('connection', (client) => {
-    console.log('Socket Client Connected!');
-    console.log(client);
-});
-
-peerserver.on('disconnect', (client) => { 
-    console.log('Socket Client Disconnected!');
-    console.log(client);
+http.listen(8000, function() {
+  console.log("listening on *:8000");
 });
