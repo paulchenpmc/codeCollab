@@ -2,16 +2,10 @@ import React from 'react';
 import './App.css';
 import { Link } from 'react-router-dom';
 import TextField from '@material-ui/core/TextField';
-import { withStyles } from "@material-ui/core/styles";
 import logo from './codeCollabLogo.png';
 import './App.css';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
-
-const styles = {
-  background: "transparent",
-  color: "white",
-};
 
 class Editorpage extends React.Component {
   constructor(props){
@@ -27,26 +21,43 @@ class Editorpage extends React.Component {
   }
 
   componentDidMount() {
+    // TODO - Probably replace this with init logic based on
+    // pre-existing session (load code cells into editor) vs new session (blank editor)
     this.setState({
       children: [this.renderTextbox()]
     });
   }
 
-  renderTextbox() {
+  renderTextbox(cellContents) {
     let keyvalue = this.state.childkey;
     this.setState({
       childkey: this.state.childkey + 1,
     });
+    let cellLabel = "Cell " + keyvalue;
+    // If optional arg not given, set default text
+    if (!cellContents) {
+      cellContents = 'print("Hello World!")';
+    }
 
     return (
       <TextField
         key={keyvalue}
         id="outlined-multiline-flexible"
-        label="Editor"
+        label={cellLabel}
         multiline
         fullWidth
-        defaultValue='print("Hello World!")'
+        defaultValue={cellContents}
         variant="filled"
+        InputLabelProps={{
+          style: {
+            color: 'white'
+          }
+        }}
+        InputProps={{
+          style: {
+            color: 'white'
+          }
+        }}
       />
       );
   }
@@ -69,8 +80,8 @@ class Editorpage extends React.Component {
           <div className="box-container">
             {this.state.children.map(child => child)}
           </div>
-          <IconButton aria-label="add" onClick={this.handleButtonClick}>
-            <AddIcon />
+          <IconButton aria-label="add" onClick={this.handleButtonClick} style={{width: '5vw', height: '5vw', marginRight: '47.5vw', marginLeft: '47.5vw'}}>
+            <AddIcon style={{color: 'white'}}/>
           </IconButton>
         </body>
       </div>
@@ -78,4 +89,4 @@ class Editorpage extends React.Component {
   }
 }
 
-export default withStyles(styles)(Editorpage);
+export default Editorpage;
