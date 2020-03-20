@@ -7,7 +7,7 @@ let session_list = ['test1', 'test2', 'test3'];
 
 io.on("connection", function(socket) {
 
-    socket.emit("session_list", JSON.stringify(session_list));
+    socket.emit("session_list", session_list);
 
     socket.on("disconnect", function() {
         console.log("client disconnected");

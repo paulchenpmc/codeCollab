@@ -4,23 +4,24 @@ import io from 'socket.io-client';
 
 const peer_data = observable({
     //  hard coded data for now
-    session_list: ['test1', 'test2', 'test3'],
+    session_list: [ ['test1','1'], 
+                    ['test2','2'], 
+                    ['test3','3']],
     session_peers: [],
     session_peers_conn: [],
     peer: null,
 
-    peer_id: -1,
-    current_session: 'test1',
-    current_session_id: '1',                        //  in case 2 files have the same name
+    peer_id: '',
+    current_session: '',
+    current_session_id: '',                      
     socket: null,
     doc_data: 'Hello World.',
 
     initialize(){
-        console.log('in initialize function');
         // will change later, hard coded for now
         this.socket = io('http://localhost:8000/');
         this.socket.on('session_list', function (list) {
-            this.session_list = JSON.parse(list);
+            this.session_list = list;
         });
     },
 
@@ -29,18 +30,16 @@ const peer_data = observable({
 
         this.peer.on('open', function(id){
             this.peer_id = id;
-            console.log("id: " + this.id);
 
-            let peer_info = {   "session_name": session_name, 
+            let peer_info = {   "session_name": session_name,
                                 "peer_id": this.peer_id};
 
             //  inform tracker new session info
-            this.socket.emit('new session', JSON.stringify(peer_info));
+            this.socket.emit('new_session', peer_info);
 
-            this.socket.on('session created', function(session_info){
-                let temp = JSON.parse(session_info);
-                this.current_session = temp.session_name;
-                this.current_session_id = temp.session_id;
+            this.socket.on('session_created', function(session_info){
+                this.current_session = session_info.session_name;
+                this.current_session_id = session_info.session_id;
             });
 
             this.listen_for_req();
@@ -48,24 +47,25 @@ const peer_data = observable({
     },
 
     //  Join an active session or open preexisted doc
-    join_session(session_name){
+    join_session(session_name, session_id){
         this.current_session = session_name;
+        this.current_session_id = session_id;
 
         this.peer = new Peer();
 
         this.peer.on('open', function(id){
             this.peer_id = id;
-            console.log("id: " + this.id);
 
-            let peer_info = {   "session_name": session_name, 
+            let peer_info = {   "session_name": this.current_session, 
+                                "session_id": this.current_session_id,
                                 "peer_id": this.peer_id};
 
             //  Request list of peers in <session_name> session
-            this.socket.emit('join session', JSON.stringify(peer_info));
+            this.socket.emit('join_session', peer_info);
 
             //  wait for a list of peers currently in the session
             this.socket.on('peer_list', function(list){
-                this.session_peers = JSON.parse(list);
+                this.session_peers = list;
                 this.request_doc_data();
             });
 
@@ -115,28 +115,13 @@ const peer_data = observable({
 
     upload_document(d){
         this.doc_data = d;
-    },  
-
-    get get_doc_data(){
-        return this.doc_data;
     },
-
-    get get_session_list(){
-        return this.session_list;
-    },
-
-    get get_peer_id(){
-        return this.peer_id;
-    }
 },
 {
     initialize: action,
     create_new_session: action,
     join_session: action,
     upload_document: action,
-    get_session_list: computed,
-    get_doc_data: computed,
-    get_peer_id: computed,
 });
 
 export default peer_data;
