@@ -11,9 +11,6 @@ class Editorpage extends React.Component {
   constructor(props){
     super(props);
 
-    this.renderTextbox = this.renderTextbox.bind(this);
-    this.handleButtonClick = this.handleButtonClick.bind(this);
-
     this.state = {
       cellCount: 0,
       cellText: [],
@@ -29,7 +26,7 @@ class Editorpage extends React.Component {
 
   // Creates html for new editor cell.
   // cellContents: Optional arg for the text contents of that editor cell
-  renderTextbox(keyvalue, cellContents) {
+  renderTextbox = (keyvalue, cellContents) => {
     if (typeof(keyvalue) !== 'number') {
       return;
     }
@@ -39,6 +36,20 @@ class Editorpage extends React.Component {
     }
 
     let cellLabel = "Cell " + keyvalue.toString();
+    let disableCell = this.state.cellLocked[keyvalue];
+    let textProps = {
+      style: {
+        color: 'white'
+      }
+    }
+    if (disableCell) {
+      textProps = {
+        style: {
+          color: 'white',
+          background: '#de5246'
+        }
+      }
+    }
 
     return (
       <TextField
@@ -47,7 +58,7 @@ class Editorpage extends React.Component {
         label={cellLabel}
         multiline
         fullWidth
-        disabled={this.state.cellLocked[keyvalue]}
+        disabled={disableCell}
         defaultValue={cellContents}
         variant="filled"
         InputLabelProps={{
@@ -55,25 +66,21 @@ class Editorpage extends React.Component {
             color: 'white'
           }
         }}
-        InputProps={{
-          style: {
-            color: 'white'
-          }
-        }}
+        InputProps={textProps}
       />
       );
   }
 
   // Appends an editor cell with supplied text.
   // cellContents: the text contents of that editor cell
-  addEditorCell(cellContents) {
+  addEditorCell = (cellContents) => {
     if (!cellContents) {
       cellContents = '';
     }
 
     this.setState({
-      cellText: this.state.cellText.concat([cellContents]),
-      cellLocked: this.state.cellLocked.concat([false]),
+      cellText: this.state.cellText.concat(cellContents),
+      cellLocked: this.state.cellLocked.concat(false),
     });
 
     this.setState({
@@ -81,17 +88,21 @@ class Editorpage extends React.Component {
     });
   }
 
-  lockEditorCell(key) {
-
+  lockEditorCell = (key) => {
+    let temp = this.state.cellLocked;
+    temp[key] = true;
+    this.setState({ cellLocked:temp });
   }
 
-  unlockEditorCell(key) {
-
+  unlockEditorCell = (key) => {
+    let temp = this.state.cellLocked;
+    temp[key] = false;
+    this.setState({ cellLocked:temp });
   }
 
   // Event handler for button click to add new blank editor cell.
   // e: button click event
-  handleButtonClick(e) {
+  handleButtonClick = (e) => {
     e.preventDefault();
     this.addEditorCell();
   }
