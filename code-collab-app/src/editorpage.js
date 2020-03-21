@@ -16,30 +16,29 @@ class Editorpage extends React.Component {
 
     this.state = {
       cellCount: 0,
-      children: [],
+      cellText: [],
+      cellLocked: [],
     }
   }
 
   componentDidMount() {
     // TODO - Probably replace this with init logic based on
     // pre-existing session (load code cells into editor) vs new session (blank editor)
-    this.setState({
-      children: [this.renderTextbox('print("Hello World!")')]
-    });
+    this.addEditorCell('print("Hello World!")');
   }
 
   // Creates html for new editor cell.
   // cellContents: Optional arg for the text contents of that editor cell
-  renderTextbox(cellContents) {
-    let keyvalue = this.state.cellCount;
-    this.setState({
-      cellCount: this.state.cellCount + 1,
-    });
-    let cellLabel = "Cell " + keyvalue;
+  renderTextbox(keyvalue, cellContents) {
+    if (typeof(keyvalue) !== 'number') {
+      return;
+    }
     // If optional arg not given, set default text
     if (!cellContents) {
       cellContents = '';
     }
+
+    let cellLabel = "Cell " + keyvalue.toString();
 
     return (
       <TextField
@@ -48,7 +47,7 @@ class Editorpage extends React.Component {
         label={cellLabel}
         multiline
         fullWidth
-        disabled={false}
+        disabled={this.state.cellLocked[keyvalue]}
         defaultValue={cellContents}
         variant="filled"
         InputLabelProps={{
@@ -73,7 +72,12 @@ class Editorpage extends React.Component {
     }
 
     this.setState({
-      children: this.state.children.concat([this.renderTextbox(cellContents)])
+      cellText: this.state.cellText.concat([cellContents]),
+      cellLocked: this.state.cellLocked.concat([false]),
+    });
+
+    this.setState({
+      cellCount: this.state.cellCount + 1,
     });
   }
 
@@ -89,10 +93,7 @@ class Editorpage extends React.Component {
   // e: button click event
   handleButtonClick(e) {
     e.preventDefault();
-
-    this.setState({
-      children: this.state.children.concat([this.renderTextbox()])
-    });
+    this.addEditorCell();
   }
 
   render() {
@@ -103,7 +104,12 @@ class Editorpage extends React.Component {
         </header>
         <body className="App-editor">
           <div className="box-container">
-            {this.state.children.map(child => child)}
+            {
+              this.state.cellText.map((cellContents, index) => (
+                <React.Fragment key={index}>
+                  { this.renderTextbox(index, cellContents) }
+                </React.Fragment>))
+            }
           </div>
           <IconButton aria-label="add" onClick={this.handleButtonClick} style={{width: '5vw', height: '5vw', marginRight: '47.5vw', marginLeft: '47.5vw'}}>
             <AddIcon style={{color: 'white'}}/>
