@@ -15,8 +15,8 @@ class Editorpage extends React.Component {
     this.handleButtonClick = this.handleButtonClick.bind(this);
 
     this.state = {
-      childkey: 0,
-      children: []
+      cellCount: 0,
+      children: [],
     }
   }
 
@@ -24,19 +24,21 @@ class Editorpage extends React.Component {
     // TODO - Probably replace this with init logic based on
     // pre-existing session (load code cells into editor) vs new session (blank editor)
     this.setState({
-      children: [this.renderTextbox()]
+      children: [this.renderTextbox('print("Hello World!")')]
     });
   }
 
+  // Creates html for new editor cell.
+  // cellContents: Optional arg for the text contents of that editor cell
   renderTextbox(cellContents) {
-    let keyvalue = this.state.childkey;
+    let keyvalue = this.state.cellCount;
     this.setState({
-      childkey: this.state.childkey + 1,
+      cellCount: this.state.cellCount + 1,
     });
     let cellLabel = "Cell " + keyvalue;
     // If optional arg not given, set default text
     if (!cellContents) {
-      cellContents = 'print("Hello World!")';
+      cellContents = '';
     }
 
     return (
@@ -46,6 +48,7 @@ class Editorpage extends React.Component {
         label={cellLabel}
         multiline
         fullWidth
+        disabled={false}
         defaultValue={cellContents}
         variant="filled"
         InputLabelProps={{
@@ -62,6 +65,28 @@ class Editorpage extends React.Component {
       );
   }
 
+  // Appends an editor cell with supplied text.
+  // cellContents: the text contents of that editor cell
+  addEditorCell(cellContents) {
+    if (!cellContents) {
+      cellContents = '';
+    }
+
+    this.setState({
+      children: this.state.children.concat([this.renderTextbox(cellContents)])
+    });
+  }
+
+  lockEditorCell(key) {
+
+  }
+
+  unlockEditorCell(key) {
+
+  }
+
+  // Event handler for button click to add new blank editor cell.
+  // e: button click event
   handleButtonClick(e) {
     e.preventDefault();
 
