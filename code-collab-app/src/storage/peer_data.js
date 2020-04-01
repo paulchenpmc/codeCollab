@@ -42,7 +42,7 @@ const peer_data = observable({
                 this.current_session_id = session_info.session_id;
             });
 
-            this.listen_for_req();
+            // this.listen_for_req();
         })
     },
 
@@ -69,7 +69,7 @@ const peer_data = observable({
                 this.request_doc_data();
             });
 
-            this.listen_for_req();
+            // this.listen_for_req();
         });
     },
 
