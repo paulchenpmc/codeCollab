@@ -18,6 +18,7 @@ h1.subheading {
 
 .row {
   padding-top: 10px;
+  justify-content: left;
 }
 .col-sm {
   padding-right: 10px;
@@ -61,6 +62,11 @@ h1.subheading {
 
 .App-link {
   color: #61dafb;
+}
+
+.doc {
+  width: 350px;
+  height: auto;
 }
 
 
