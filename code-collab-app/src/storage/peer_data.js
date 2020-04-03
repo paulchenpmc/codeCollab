@@ -29,9 +29,7 @@ const peer_data = observable({
     initialize() {
         // will change later, hard coded for now
         this.tracker = io('http://localhost:8001/');
-        console.log('connected to tracker socket.io ' + this.tracker);
         this.tracker.on('session_list', function (list) {
-            console.log('recieve session list ' + list);
             this.session_list = list;
         });
     },
@@ -54,8 +52,6 @@ const peer_data = observable({
                 this.current_session = session_info.session_name;
                 this.current_session_id = session_info.session_id;
             });
-
-            // this.listen_for_req();
         })
     },
 
@@ -83,8 +79,6 @@ const peer_data = observable({
                 this.session_peers = list;
                 this.request_doc_data();
             });
-
-            // this.listen_for_req();
         });
     },
 
