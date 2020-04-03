@@ -12,9 +12,9 @@ const config = {
 const peer_data = observable({
     //  hard coded data for now
     session_list: [
-        ['test1', '1'],
-        ['test2', '2'],
-        ['test3', '3']
+        {id: 1, document_name: 'test1', peers: [1, 2]}, 
+        {id: 2, document_name: 'test2', peers: [3]}, 
+        {id: 3, document_name: 'test3', peers: []}
     ],
     session_peers: [],
     session_peers_conn: [],
@@ -24,7 +24,7 @@ const peer_data = observable({
     current_session: '',
     current_session_id: '',
     tracker: null,
-    doc_data: 'Hello World.',
+    doc_data: ['Hello World.', 'This is a test.'],
 
     initialize() {
         // will change later, hard coded for now
@@ -125,12 +125,18 @@ const peer_data = observable({
     upload_document(d) {
         this.doc_data = d;
     },
+
+    // Get document data from the tracker if no peer active for the document
+    get_document_data(session_id) {
+        this.tracker.emit('get_doc_data', session_id);
+    }
 },
-    {
-        initialize: action,
-        create_new_session: action,
-        join_session: action,
-        upload_document: action,
-    });
+{
+    initialize: action,
+    create_new_session: action,
+    join_session: action,
+    upload_document: action,
+    get_document_data: action,
+});
 
 export default peer_data;

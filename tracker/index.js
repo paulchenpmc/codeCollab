@@ -51,6 +51,12 @@ io.on("connection", peer => {
     peer.emit('peer_list', peers || []);
   });
 
+  // Get document data request
+  peer.on('get_doc_data', session_id => {
+    const document = peerRoute.getDocument(session_id)
+    socket.emit('rcv_doc_data', { doc: document });
+  });
+
   peer.on("disconnect", () => console.log("lost socket.io connection " + peer.id));
 });
 

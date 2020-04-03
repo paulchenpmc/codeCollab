@@ -4,14 +4,14 @@ const { generateId, writeToFile, readDataFiles } = require('../utils');
 let sessions = {};
 
 const loadSessions = async () => {
-    console.log('Initializing tracker sessions from disk...');
+    console.log('\nInitializing tracker sessions from disk...');
     sessions = await readDataFiles();
     console.log('Tracker documents loaded.\n')
 }
 
 const addSession = (document_name, peers) => {
     const sessionID = generateId();
-    console.log('Creating a new session for ' + document_name + ' with session id ' + sessionID);
+    console.log('\nCreating a new session for ' + document_name + ' with session id ' + sessionID);
 
     sessions[sessionID] = {
         id: sessionID,
@@ -26,7 +26,7 @@ const saveSession = (sessionID, data) => {
     // If the session doesn't exist
     if (!!sessions[sessionID]) {
         console.error('Save failed for session ' + sessionID + '.',
-            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to save it.');
+            'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to save it.');
         return;
     }
     sessions[sessionID].data = data;
@@ -37,7 +37,7 @@ const addPeer = (sessionID, newPeer) => {
     // If the session doesn't exist
     if (!!sessions[sessionID]) {
         console.error('Add peer failed for session ' + sessionID + '.',
-            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to modify it.');
+            'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to modify it.');
         return;
     }
     sessions[sessionID].peers.push(newPeer);
@@ -48,14 +48,14 @@ const removePeer = (sessionID, peer) => {
     // If the session doesn't exist
     if (!!sessions[sessionID]) {
         console.error('Remove peer failed for session ' + sessionID + '.',
-            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to modify it.');
+            'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to modify it.');
         return;
     }
     sessions[sessionID].peers = sessions[sessionID].peers.filter(peer => newPeer !== peer);
 }
 
 const getSessionList = () => {
-    console.log('Get session list');
+    console.log('\nGet session list');
     let sessionList = [];
     for (const id in sessions) {
         // Use spread syntax omit the session cell content from the list
@@ -68,11 +68,22 @@ const getSessionList = () => {
     return sessionList;
 }
 
+const getDocument = (sessionID) => {
+    if (!!sessions[sessionID]) {
+        console.error('Get document data failed for session ' + sessionID + '.',
+            'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to find it.');
+        return [];
+    }
+    console.log('Sending document data for: ' + sessions[sessionID].document_name);
+    return sessions[sessionID].data;
+}
+
 module.exports = {
     loadSessions,
     saveSession,
     addSession,
     addPeer,
     removePeer,
-    getSessionList
+    getSessionList,
+    getDocument
 }
