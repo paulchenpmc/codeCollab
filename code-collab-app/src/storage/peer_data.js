@@ -11,11 +11,7 @@ const config = {
 
 const peer_data = observable({
     //  hard coded data for now
-    session_list: [
-        {id: 1, document_name: 'test1', peers: [1, 2]}, 
-        {id: 2, document_name: 'test2', peers: [3]}, 
-        {id: 3, document_name: 'test3', peers: []}
-    ],
+    session_list: [],
     session_peers: [],
     session_peers_conn: [],
     peer: null,
@@ -29,7 +25,7 @@ const peer_data = observable({
     initialize() {
         // will change later, hard coded for now
         this.tracker = io('http://localhost:8001/');
-        this.tracker.on('session_list', function (list) {
+        this.tracker.on('session_list', list => {
             this.session_list = list;
         });
     },
@@ -37,7 +33,7 @@ const peer_data = observable({
     create_new_session(session_name) {
         this.peer = new Peer(config);
 
-        this.peer.on('open', function (id) {
+        this.peer.on('open', id => {
             this.peer_id = id;
 
             let peer_info = {
@@ -48,7 +44,7 @@ const peer_data = observable({
             //  inform tracker new session info
             this.tracker.emit('new_session', peer_info);
 
-            this.tracker.on('session_created', function (session_info) {
+            this.tracker.on('session_created', session_info => {
                 this.current_session = session_info.session_name;
                 this.current_session_id = session_info.session_id;
             });
@@ -62,7 +58,7 @@ const peer_data = observable({
 
         this.peer = new Peer(config);
 
-        this.peer.on('open', function (id) {
+        this.peer.on('open', id => {
             this.peer_id = id;
 
             let peer_info = {
@@ -75,7 +71,7 @@ const peer_data = observable({
             this.tracker.emit('join_session', peer_info);
 
             //  wait for a list of peers currently in the session
-            this.tracker.on('peer_list', function (list) {
+            this.tracker.on('peer_list', list => {
                 this.session_peers = list;
                 this.request_doc_data();
             });
@@ -89,20 +85,20 @@ const peer_data = observable({
         //  if == 0, then no need to connect to other peers
         if (this.session_peers.length !== 0) {
             //  connect with all peers
-            this.session_peers.forEach(function (p, i) {
+            this.session_peers.forEach( (p, i) => {
                 this.session_peers_conn[i] = this.peer.connect(p);
             });
 
             //  request doc data from one of them
-            this.session_peers_conn[0].on('open', function () {
+            this.session_peers_conn[0].on('open', () => {
                 this.session_peers_conn[0].send('get doc');
             });
 
-            this.session_peers_conn[0].on('error', function (err) {
+            this.session_peers_conn[0].on('error', err => {
                 console.log(err);
             });
 
-            this.session_peers_conn[0].on('data', function (data) {
+            this.session_peers_conn[0].on('data', data => {
                 console.log(data);
             });
         }
@@ -111,12 +107,12 @@ const peer_data = observable({
     //  listen for other peer's initial connection
     //  and their request for the doc data
     listen_for_req() {
-        this.peer.on('connection', function (dataConnection) {
-            dataConnection.on('error', function (err) {
+        this.peer.on('connection', dataConnection => {
+            dataConnection.on('error', err => {
                 console.log("listen for req err: " + err);
             });
 
-            dataConnection.on('data', function (data) {
+            dataConnection.on('data', data => {
                 dataConnection.send(this.doc_data);
             });
         });
