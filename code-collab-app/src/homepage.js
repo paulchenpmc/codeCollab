@@ -14,26 +14,42 @@ class Homepage extends React.Component {
   }
 
   handleJoinSession(session_info) {
-    peer_data.join_session(session_info[0], session_info[1]);
-    this.props.history.push({
-      pathname: '/editor',
-      data: peer_data.doc_data
-    });
-    peer_data.listen_for_req();
+    peer_data.join_session(session_info.document_name, session_info.id);
+    // If only peer in the session, get doc data from tracker
+    if(session_info.peers.length === 0) {
+      peer_data.get_document_data(session_info.document_name);
+      peer_data.socket.on('rcv_doc_data', (data) => {
+        peer_data.doc_data = data.doc;
+        this.props.history.push({
+          pathname: '/editor',
+          data: peer_data.doc_data,
+          peer: peer_data
+        });
+      });
+    }
+    else {
+      this.props.history.push({
+        pathname: '/editor',
+        data: peer_data.doc_data,
+        peer: peer_data
+      });
+    }
   }
 
   handleNewSession() {
     // TODO: Dynamically set session name (get from user?)
     peer_data.create_new_session('Test');
-    this.props.history.push('/editor');
-    peer_data.listen_for_req();
+    this.props.history.push({
+      pathname: '/editor',
+      peer: peer_data
+    });
   }
 
   renderOneCol(row) {
     return (
       <div className="row">
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
       </div>
     );
@@ -43,10 +59,10 @@ class Homepage extends React.Component {
     return (
       <div className="row">
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[1])}} className="doc">{row[1][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[1])}} className="doc">{row[1].document_name}</ListGroup.Item>
         </div>
       </div>
     );
@@ -56,13 +72,13 @@ class Homepage extends React.Component {
     return (
       <div className="row">
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[1])}} className="doc">{row[1][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[1])}} className="doc">{row[1].document_name}</ListGroup.Item>
         </div>
         <div className="col-sm">
-          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[2])}} className="doc">{row[2][0]}</ListGroup.Item>
+          <ListGroup.Item action onClick={() => {this.handleJoinSession(row[2])}} className="doc">{row[2].document_name}</ListGroup.Item>
         </div>
       </div>
     );

@@ -13,15 +13,16 @@ class Editorpage extends React.Component {
 
     this.state = {
       cellCount: 0,
-      cellText: [],
+      cellText: (this.props.location.data) ? this.props.location.data : [],
       cellLocked: [],
     }
   }
 
   componentDidMount() {
-    // TODO - Probably replace this with init logic based on
-    // pre-existing session (load code cells into editor) vs new session (blank editor)
-    this.addEditorCell('print("Hello World!")');
+    if(this.state.cellText.length === 0){
+      this.addEditorCell('print("Hello World!")');
+    }
+    this.props.location.peer.listen_for_req();
   }
 
   // Creates html for new editor cell.
