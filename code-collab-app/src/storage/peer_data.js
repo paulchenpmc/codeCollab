@@ -122,9 +122,6 @@ const peer_data = observable({
     // Get document data from the tracker if no peer active for the document
     get_document_data(doc_name) {
         this.socket.emit('get_doc_data', {doc: doc_name});
-        this.socket.on('rcv_doc_data', (data) => {
-            this.doc_data = data;
-        });
     }
 },
 {

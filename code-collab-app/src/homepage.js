@@ -15,15 +15,25 @@ class Homepage extends React.Component {
 
   handleJoinSession(session_info) {
     peer_data.join_session(session_info.document_name, session_info.id);
-    // If only peer in the session
+    // If only peer in the session, get doc data from tracker
     if(session_info.peers.length === 0) {
-      peer_data.get_document_data(session_info[0]);
+      peer_data.get_document_data(session_info.document_name);
+      peer_data.socket.on('rcv_doc_data', (data) => {
+        peer_data.doc_data = data.doc;
+        this.props.history.push({
+          pathname: '/editor',
+          data: peer_data.doc_data,
+          peer: peer_data
+        });
+      });
     }
-    this.props.history.push({
-      pathname: '/editor',
-      data: peer_data.doc_data,
-      peer: peer_data
-    });
+    else {
+      this.props.history.push({
+        pathname: '/editor',
+        data: peer_data.doc_data,
+        peer: peer_data
+      });
+    }
   }
 
   handleNewSession() {
