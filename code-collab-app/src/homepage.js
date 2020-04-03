@@ -3,45 +3,44 @@ import logo from './codeCollabLogo.png';
 import './App.css';
 import { Button, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import peer_data from './storage/peer_data';
+import { inject, observer } from 'mobx-react';
 
 class Homepage extends React.Component {
   constructor(props){
     super(props);
     
-    peer_data.initialize();
-    this.activeSessions = peer_data.session_list;
+    props.peer_data.initialize();
   }
 
   handleJoinSession(session_info) {
-    peer_data.join_session(session_info.document_name, session_info.id);
+    this.props.peer_data.join_session(session_info.document_name, session_info.id);
     // If only peer in the session, get doc data from tracker
     if(session_info.peers.length === 0) {
-      peer_data.get_document_data(session_info.id);
-      peer_data.socket.on('rcv_doc_data', (data) => {
-        peer_data.doc_data = data.doc;
+      this.props.peer_data.get_document_data(session_info.id);
+      this.props.peer_data.socket.on('rcv_doc_data', (data) => {
+        this.props.peer_data.doc_data = data.doc;
         this.props.history.push({
           pathname: '/editor',
-          data: peer_data.doc_data,
-          peer: peer_data
+          data: this.props.peer_data.doc_data,
+          peer: this.props.peer_data
         });
       });
     }
     else {
       this.props.history.push({
         pathname: '/editor',
-        data: peer_data.doc_data,
-        peer: peer_data
+        data: this.props.peer_data.doc_data,
+        peer: this.props.peer_data
       });
     }
   }
 
   handleNewSession() {
     // TODO: Dynamically set session name (get from user?)
-    peer_data.create_new_session('Test');
+    this.props.peer_data.create_new_session('Test');
     this.props.history.push({
       pathname: '/editor',
-      peer: peer_data
+      peer: this.props.peer_data
     });
   }
 
@@ -87,8 +86,8 @@ class Homepage extends React.Component {
   renderAvailableSessions() {
     let session_rows = [];
     let col_num = 3;
-    for (let i = 0; i < this.activeSessions.length; i += col_num) {
-      let row = this.activeSessions.slice(i, i + col_num);
+    for (let i = 0; i < this.props.peer_data.session_list.length; i += col_num) {
+      let row = this.props.peer_data.session_list.slice(i, i + col_num);
       if (row.length === 3) {
         session_rows.push(this.renderThreeCol(row));
       }
@@ -124,4 +123,4 @@ class Homepage extends React.Component {
   }
 }
 
-export default Homepage;
+export default inject('peer_data')(observer(Homepage));
