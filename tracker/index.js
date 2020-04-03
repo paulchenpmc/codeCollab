@@ -42,12 +42,13 @@ io.on("connection", peer => {
       session_id: session.id,
       session_name: session.document_name
     });
+
+    peerRoute.saveSession(session.id, session.data);
   });
 
   // Join existing session
   peer.on('join_session', data => {
-    const peers = addPeer(data.session_id, data.peer_id);
-    console.log(peers)
+    const peers = peerRoute.addPeer(data.session_id, data.peer_id);
     peer.emit('peer_list', peers || []);
   });
 
