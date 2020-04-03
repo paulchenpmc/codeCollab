@@ -9,14 +9,14 @@ const loadSessions = async () => {
     console.log('Tracker documents loaded.\n')
 }
 
-const addSession = (document_name, peers) => {
+const addSession = (document_name, peer) => {
     const sessionID = generateId();
     console.log('\nCreating a new session for ' + document_name + ' with session id ' + sessionID);
 
     sessions[sessionID] = {
         id: sessionID,
         document_name: document_name,
-        peers: peers,
+        peers: [peer],
         data: []
     }
     return sessions[sessionID];
@@ -24,7 +24,7 @@ const addSession = (document_name, peers) => {
 
 const saveSession = (sessionID, data) => {
     // If the session doesn't exist
-    if (!!sessions[sessionID]) {
+    if (!sessions[sessionID]) {
         console.error('Save failed for session ' + sessionID + '.',
             'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to save it.');
         return;
@@ -35,7 +35,7 @@ const saveSession = (sessionID, data) => {
 
 const addPeer = (sessionID, newPeer) => {
     // If the session doesn't exist
-    if (!!sessions[sessionID]) {
+    if (!sessions[sessionID]) {
         console.error('Add peer failed for session ' + sessionID + '.',
             'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to modify it.');
         return;
@@ -46,7 +46,7 @@ const addPeer = (sessionID, newPeer) => {
 
 const removePeer = (sessionID, peer) => {
     // If the session doesn't exist
-    if (!!sessions[sessionID]) {
+    if (!sessions[sessionID]) {
         console.error('Remove peer failed for session ' + sessionID + '.',
             'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to modify it.');
         return;
@@ -69,7 +69,7 @@ const getSessionList = () => {
 }
 
 const getDocument = (sessionID) => {
-    if (!!sessions[sessionID]) {
+    if (!sessions[sessionID]) {
         console.error('Get document data failed for session ' + sessionID + '.',
             'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to find it.');
         return [];
