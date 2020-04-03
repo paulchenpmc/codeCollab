@@ -1,29 +1,78 @@
-let sessions = [
-    ['session 1', '1'], 
-    ['session 2', '2'], 
-    ['session 3', '3']
-]; 
+const { generateId, writeToFile, readDataFiles } = require('../utils');
 
-// SESSION ACTIONS
-const loadSessions = () => {
+// Loaded from disk
+let sessions = {};
 
+const loadSessions = async () => {
+    console.log('Initializing tracker sessions from disk...');
+    sessions = await readDataFiles();
+    console.log('Tracker documents loaded.\n')
 }
 
-const addSession = () => {
+const addSession = (document_name, peers) => {
+    const sessionID = generateId();
+    console.log('Creating a new session for ' + document_name + ' with session id ' + sessionID);
 
+    sessions[sessionID] = {
+        id: sessionID,
+        document_name: document_name,
+        peers: peers,
+        data: []
+    }
+    return sessions[sessionID];
 }
 
-const saveSession = () => {
-
+const saveSession = (sessionID, data) => {
+    // If the session doesn't exist
+    if (!!sessions[sessionID]) {
+        console.error('Save failed for session ' + sessionID + '.',
+            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to save it.');
+        return;
+    }
+    sessions[sessionID].data = data;
+    writeToFile(sessionID, sessions[sessionID]);
 }
 
-// PEER ACTIONS
+const addPeer = (sessionID, newPeer) => {
+    // If the session doesn't exist
+    if (!!sessions[sessionID]) {
+        console.error('Add peer failed for session ' + sessionID + '.',
+            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to modify it.');
+        return;
+    }
+    sessions[sessionID].peers.push(newPeer);
+    return sessions[sessionID].peers;
+}
 
+const removePeer = (sessionID, peer) => {
+    // If the session doesn't exist
+    if (!!sessions[sessionID]) {
+        console.error('Remove peer failed for session ' + sessionID + '.',
+            'Session ' + sessionID + ' does not exist. Create it with the "addSession" method before trying to modify it.');
+        return;
+    }
+    sessions[sessionID].peers = sessions[sessionID].peers.filter(peer => newPeer !== peer);
+}
 
-
-
+const getSessionList = () => {
+    console.log('Get session list');
+    let sessionList = [];
+    for (const id in sessions) {
+        // Use spread syntax omit the session cell content from the list
+        const {
+            data,
+            ...sessionData
+        } = sessions[id];
+        sessionList.push(sessionData);
+    }
+    return sessionList;
+}
 
 module.exports = {
-    sessions
+    loadSessions,
+    saveSession,
+    addSession,
+    addPeer,
+    removePeer,
+    getSessionList
 }
-    

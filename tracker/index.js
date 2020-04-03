@@ -5,20 +5,7 @@ const app = express();
 const http = require("http");
 const socketIO = require("socket.io");
 const httpRoute = require('./routes/httpRoute');
-
-let session_list = ['test1', 'test2', 'test3'];
-
-// let session = {
-//     id: '',             // Unique session id
-//     document_name: '',  // title of the document
-//     peers: []           // List of peers in the session
-// }
-
-// let peer = {
-//     id: '',     // PeerJS Peer ID
-//     name: '',   // Display name?
-//     color: ''   // Display color?
-// }
+const peerRoute = require('./routes/peerRoute');
 
 // HTTP Server
 app.use(cors());
@@ -27,7 +14,7 @@ app.use('/', httpRoute);
 
 // PeerJS Server. Tracks peer location info for p2p connections.
 const pjs_server = app.listen(8000);
-const peerServer = ExpressPeerServer(pjs_server, {path: '/tracker'});
+const peerServer = ExpressPeerServer(pjs_server, { path: '/tracker' });
 app.use('/peerjs', peerServer);
 
 peerServer.on('connection', peer => {
@@ -45,7 +32,24 @@ const io = socketIO(sio_server);
 io.on("connection", peer => {
   console.log('\nnew socket.io connection: ' + peer.id);
 
-  peer.emit("session_list", session_list);
+  // Send list of documents/sessions
+  peer.emit("session_list", peerRoute.getSessionList());
+
+  // Create new session
+  peer.on('new_session', data => {
+    const session = peerRoute.addSession(data.session_name, data.peer_id);
+    peer.emit("session_created", {
+      session_id: session.id,
+      session_name: session.document_name
+    });
+  });
+
+  // Join existing session
+  peer.on('join_session', data => {
+    const peers = addPeer(data.session_id, data.peer_id);
+    console.log(peers)
+    peer.emit('peer_list', peers || []);
+  });
 
   peer.on("disconnect", () => console.log("lost socket.io connection " + peer.id));
 });
@@ -55,3 +59,6 @@ sio_server.listen(8001, function () {
   console.log("PeerJS listening on *:8000/peerjs/tracker");
   console.log("Socket.IO listening on *:8001");
 });
+
+// Initialize the tracker state from saved files
+peerRoute.loadSessions();
