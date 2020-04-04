@@ -26,6 +26,21 @@ class Editorpage extends React.Component {
     this.props.location.peer.listen_for_req();
   }
 
+  setCellText = (keyvalue, cellContents) => {
+    // Theoretically this is a nicer way to update state,
+    //     but it interprets keyvalue as a literal string so it doesn't index properly :/
+    // this.setState({
+    //   cellText: update(this.state.cellText, {keyvalue: {$set: event.target.value}})
+    // });
+
+    // 1. Make a shallow copy of the cellText
+    let cellTextCopy = [...this.state.cellText];
+    // 2. Mutate local copy to set realtime text contents of cell
+    cellTextCopy[keyvalue] = cellContents;
+    // 3. Set the state to our new copy
+    this.setState({cellText: cellTextCopy});
+  }
+
   // Appends an editor cell with supplied text.
   // cellContents: the text contents of that editor cell
   addEditorCell = (cellContents) => {
@@ -46,14 +61,19 @@ class Editorpage extends React.Component {
   // Locks a cell so the user cannot edit it
   // key: the index of the cell to lock
   lockEditorCell = (key) => {
+    // Lock cell so user may not edit
     let temp = this.state.cellLocked;
     temp[key] = true;
     this.setState({ cellLocked:temp });
   }
 
-  // Unlocks a cell so the user may edit it
+  // Update cell text, then Unlock a cell so the user may edit it
   // key: the index of the cell to unlock
-  unlockEditorCell = (key) => {
+  // updatedCellContents: updated cell text to apply to the cell
+  unlockEditorCell = (key, updatedCellContents) => {
+    // Update cell with new text
+    this.setCellText(key, updatedCellContents);
+    // Unlock cell
     let temp = this.state.cellLocked;
     temp[key] = false;
     this.setState({ cellLocked:temp });
@@ -63,6 +83,7 @@ class Editorpage extends React.Component {
   // key: index of cell
   requestEditorCellLock = (key) => {
     // TODO - implement socket.io request to lock this cell on all other peers in session
+    // Will probably involve calling lockEditorCell()
     console.log('Requesting cell lock from all peers for cell ' + key);
     return true;
   }
@@ -72,30 +93,37 @@ class Editorpage extends React.Component {
   // cellContents: text contents of the cell update
   broadcastCellUpdate = (key, cellContents) => {
     // TODO - implement socket.io broadcast to update cell for all other peers and release lock
+    // Will probably involve calling unlockEditorCell()
     console.log('Broadcasting cell update to peers for cell ' + key);
   }
 
-  // Event handler for cursor entering a cell. Requests a lock on the cell from
-  // all peers
+  // Event handler for cursor entering a cell. Requests a lock on the cell from all peers.
   // e: onFocus event
   // key: index of cell
   selectCellEvent = (e, key) => {
     e.preventDefault();
-    // BROADCAST UPDATE AND RELEASE LOCK FROM LAST CELL EDITED
-    // Get text of cell just released from editing
-    const lastCellEdited = this.state.cellCurrentlyEditing;
-    if (lastCellEdited !== null) {
-      // Broadcast updates to cell just released from editing
-      let text = this.state.cellText[lastCellEdited]; // Select that cell and extract the text
-      this.broadcastCellUpdate(lastCellEdited, text);
-    }
-
-    // REQUEST LOCK ON NEW CELL
-    this.setState({ cellCurrentlyEditing:null });
+    // Request lock on cell from all peers
     const lockApproved = this.requestEditorCellLock(key);
     if (lockApproved === false) return;
-    // Save the cell currently being edited
+    // Remember the cell currently being edited
     this.setState({ cellCurrentlyEditing:key });
+  }
+
+  // Event handler for cursor leaving a cell. Broadcasts update for that cell and releases lock.
+  // e: onBlur event
+  // key: index of cell
+  leaveCellEvent = (e, key) => {
+    e.preventDefault();
+    // Get index of last cell edited
+    const lastCellEdited = this.state.cellCurrentlyEditing;
+    if (lastCellEdited === null) return;
+
+    // Broadcast updates to cell just released from editing
+    let text = this.state.cellText[lastCellEdited]; // Select that cell and extract the text
+    this.broadcastCellUpdate(lastCellEdited, text);
+
+    // Reset cell last edited state
+    this.setState({ cellCurrentlyEditing:null });
   }
 
   // Event handler for button click to add new blank editor cell.
@@ -107,13 +135,9 @@ class Editorpage extends React.Component {
 
   // Creates html for new editor cell.
   // cellContents: Optional arg for the text contents of that editor cell
-  renderTextbox = (keyvalue, cellContents) => {
+  renderTextbox = (keyvalue) => {
     if (typeof(keyvalue) !== 'number') {
       return;
-    }
-    // If optional arg not given, set default text
-    if (!cellContents) {
-      cellContents = '';
     }
 
     let cellLabel = "Cell " + keyvalue.toString();
@@ -138,10 +162,11 @@ class Editorpage extends React.Component {
         id="outlined-multiline-flexible"
         label={cellLabel}
         multiline
-        onFocus={(e) => this.selectCellEvent(e, keyvalue)}
+        onFocus={(e) => this.selectCellEvent(e, keyvalue)} // When cursor enters cell
+        onBlur={(e) => this.leaveCellEvent(e, keyvalue)} // When cursor leaves cell
         fullWidth
         disabled={disableCell}
-        defaultValue={cellContents}
+        value={this.state.cellText[keyvalue]}
         variant="filled"
         InputLabelProps={{
           style: {
@@ -150,17 +175,7 @@ class Editorpage extends React.Component {
         }}
         InputProps={textProps}
         onChange={(event) => {
-          // Theoretically this is a nicer way to update state, but it interprets keyvalue as a literal string so it doesn't index properly :/
-          // this.setState({
-          //   cellText: update(this.state.cellText, {keyvalue: {$set: event.target.value}})
-          // });
-
-          // 1. Make a shallow copy of the cellText
-          let cellTextCopy = [...this.state.cellText];
-          // 2. Mutate local copy to set realtime text contents of cell
-          cellTextCopy[keyvalue] = event.target.value;
-          // 3. Set the state to our new copy
-          this.setState({cellText: cellTextCopy});
+          this.setCellText(keyvalue, event.target.value);
         }}
       />
       );
