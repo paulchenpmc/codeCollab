@@ -222,11 +222,6 @@ const peer_data = observable({
         this.doc_data.push(...new_data);
     },
 
-    // Get document data from the tracker if no peer active for the document
-    get_document_data(session_id) {
-        this.tracker.emit('get_doc_data', session_id);
-    },
-
     add_new_cell(cell_contents){
         this.doc_data.push(cell_contents);
         this.cell_locked.push(false);
@@ -265,7 +260,7 @@ const peer_data = observable({
             });
         }
     },
-    
+
     get_current_cell(){
         return this.current_cell;
     }
@@ -275,7 +270,6 @@ const peer_data = observable({
     create_new_session: action,
     join_session: action,
     upload_document: action,
-    get_document_data: action,
     add_new_cell: action,
     update_existing_cell: action,
     set_current_cell: action,
