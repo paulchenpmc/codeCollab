@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 
 const GET_DOC_REQ = 'get_doc_req';
 const GET_DOC_RES = 'get_doc_res';
+const CELL_UPDATE = 'cell_update';
 
 
 // Tracker server config for peerjs
@@ -194,6 +195,12 @@ const peer_data = observable({
             console.log('received doc data from another peer');
             this.doc_data.push(...data.content);
         }
+        // Received a cell update
+        else if(data.message_type && data.message_type === CELL_UPDATE && data.content){
+                if(data.content.index >= 0){
+                    this.doc_data[data.content.index] = data.content.value;
+                }
+        }
         else{
             // TODO -- do something more with this data
             console.log(data);
@@ -224,6 +231,7 @@ const peer_data = observable({
         this.doc_data.push(cell_contents);
         this.cell_locked.push(false);
         this.increment_cell_count();
+        this.send_cell_update(this.doc_data.length - 1);
     },
 
     update_existing_cell(index, value){
@@ -235,13 +243,32 @@ const peer_data = observable({
     },
 
     increment_cell_count(){
-        this.count += 1;
+        this.cell_count += 1;
     },
 
-    set_cell_lock(index, value){
+    set_cell_locked(index, value){
         this.cell_locked[index] = value;
-    }
+    },
 
+    send_cell_update(key){
+        // broadcast to cell
+        console.log('sending the cell update to all the peers');
+        if(this.session_peers_conn !== null){
+            this.session_peers_conn.forEach(peer_conn => {
+                peer_conn.send({
+                    message_type: CELL_UPDATE,
+                    content: {
+                        index: key,
+                        value: this.doc_data[key]
+                    }
+                });
+            });
+        }
+    },
+    
+    get_current_cell(){
+        return this.current_cell;
+    }
 },
 {
     initialize: action,
@@ -252,7 +279,9 @@ const peer_data = observable({
     add_new_cell: action,
     update_existing_cell: action,
     set_current_cell: action,
-    set_cell_lock: action,
+    set_cell_locked: action,
+    send_cell_update: action,
+    get_current_cell: action,
 });
 
 export default peer_data;

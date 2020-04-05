@@ -13,10 +13,8 @@ class Editorpage extends React.Component {
     super(props);
 
     this.state = {
-      cellCount: this.props.peer_data.cell_count,
       cellText: this.props.peer_data.doc_data,
       cellLocked: this.props.peer_data.cell_locked,
-      cellCurrentlyEditing: this.props.peer_data.current_cell,
     }
   }
 
@@ -30,8 +28,8 @@ class Editorpage extends React.Component {
     if (!cellContents) {
       cellContents = '';
     }
+    // peer_data updates the locked value, count and updates other peers
     this.props.peer_data.add_new_cell(cellContents);
-    // TODO - maybe call peer_data method to update other peers
   }
 
   // Locks a cell so the user cannot edit it
@@ -63,7 +61,8 @@ class Editorpage extends React.Component {
   broadcastCellUpdate = (key) => {
     // TODO - implement socket.io broadcast to update cell for all other peers and release lock
     // Will probably involve calling unlockEditorCell()
-    console.log('Broadcasting cell update to peers for cell ' + key);
+    // call method from peer_data to update other peers // sending updates
+    this.props.peer_data.send_cell_update(key);
   }
 
   // Event handler for cursor entering a cell. Requests a lock on the cell from all peers.
@@ -81,10 +80,10 @@ class Editorpage extends React.Component {
   // Event handler for cursor leaving a cell. Broadcasts update for that cell and releases lock.
   // e: onBlur event
   // key: index of cell
-  leaveCellEvent = (e, key) => {
+  leaveCellEvent = (e) => {
     e.preventDefault();
     // Get index of last cell edited
-    const lastCellEdited = this.state.cellCurrentlyEditing;
+    const lastCellEdited = this.props.peer_data.get_current_cell();
     if (lastCellEdited === null) return;
 
     // Broadcast updates to cell just released from editing
@@ -131,7 +130,7 @@ class Editorpage extends React.Component {
         label={cellLabel}
         multiline
         onFocus={(e) => this.selectCellEvent(e, keyvalue)} // When cursor enters cell
-        onBlur={(e) => this.leaveCellEvent(e, keyvalue)} // When cursor leaves cell
+        onBlur={(e) => this.leaveCellEvent(e)} // When cursor leaves cell
         fullWidth
         disabled={disableCell}
         value={this.state.cellText[keyvalue]}

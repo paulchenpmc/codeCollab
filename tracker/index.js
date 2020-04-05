@@ -44,6 +44,9 @@ io.on("connection", peer => {
     });
 
     peerRoute.saveSession(session.id, session.data);
+
+    // updating all the peers about the newly added session
+    io.sockets.emit("session_list", peerRoute.getSessionList());
   });
 
   // Join existing session
