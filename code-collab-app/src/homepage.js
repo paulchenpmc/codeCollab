@@ -13,13 +13,13 @@ class Homepage extends React.Component {
   }
 
   handleJoinSession(session_info) {
-    this.props.peer_data.reset();
+    this.props.peer_data.reset(session_info.id);
     this.props.peer_data.join_session(session_info.document_name, session_info.id);
     this.props.history.push({pathname: '/editor'});
   }
 
   handleNewSession() {
-    this.props.peer_data.reset();
+    this.props.peer_data.reset(null);
     // TODO: Dynamically set session name (get from user?)
     this.props.peer_data.create_new_session('New Session');
     this.props.history.push({pathname: '/editor'});
