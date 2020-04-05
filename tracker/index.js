@@ -44,6 +44,9 @@ io.on("connection", peer => {
     });
 
     peerRoute.saveSession(session.id, session.data);
+
+    // updating all the peers about the newly added session
+    io.sockets.emit("session_list", peerRoute.getSessionList());
   });
 
   // Join existing session
@@ -53,9 +56,9 @@ io.on("connection", peer => {
   });
 
   // Get document data request
-  peer.on('get_doc_data', session_id => {
+  peer.on('get_doc_req', session_id => {
     const document = peerRoute.getDocument(session_id)
-    socket.emit('rcv_doc_data', { doc: document });
+    socket.emit('get_doc_res', { doc: document });
   });
 
   peer.on("disconnect", () => console.log("lost socket.io connection " + peer.id));

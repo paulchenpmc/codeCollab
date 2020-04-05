@@ -13,35 +13,16 @@ class Homepage extends React.Component {
   }
 
   handleJoinSession(session_info) {
+    this.props.peer_data.reset();
     this.props.peer_data.join_session(session_info.document_name, session_info.id);
-    // If only peer in the session, get doc data from tracker
-    if(session_info.peers.length === 0) {
-      this.props.peer_data.get_document_data(session_info.id);
-      this.props.peer_data.socket.on('rcv_doc_data', (data) => {
-        this.props.peer_data.doc_data = data.doc;
-        this.props.history.push({
-          pathname: '/editor',
-          data: this.props.peer_data.doc_data,
-          peer: this.props.peer_data
-        });
-      });
-    }
-    else {
-      this.props.history.push({
-        pathname: '/editor',
-        data: this.props.peer_data.doc_data,
-        peer: this.props.peer_data
-      });
-    }
+    this.props.history.push({pathname: '/editor'});
   }
 
   handleNewSession() {
+    this.props.peer_data.reset();
     // TODO: Dynamically set session name (get from user?)
-    this.props.peer_data.create_new_session('Test');
-    this.props.history.push({
-      pathname: '/editor',
-      peer: this.props.peer_data
-    });
+    this.props.peer_data.create_new_session('New Session');
+    this.props.history.push({pathname: '/editor'});
   }
 
   renderOneCol(row) {

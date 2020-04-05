@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import peer_data from './storage/peer_data';
 import { BrowserRouter } from 'react-router-dom';
 
 
