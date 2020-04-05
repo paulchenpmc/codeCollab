@@ -6,7 +6,6 @@ const GET_DOC_REQ = 'get_doc_req';
 const GET_DOC_RES = 'get_doc_res';
 const CELL_UPDATE = 'cell_update';
 
-
 // Tracker server config for peerjs
 const config = {
         host: 'localhost',
