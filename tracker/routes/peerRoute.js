@@ -41,17 +41,23 @@ const addPeer = (sessionID, newPeer) => {
         return;
     }
     sessions[sessionID].peers.push(newPeer);
+
+    // persisting the change to the disk
+    writeToFile(sessionID, sessions[sessionID]);
     return sessions[sessionID].peers;
 }
 
-const removePeer = (sessionID, peer) => {
-    // If the session doesn't exist
-    if (!sessions[sessionID]) {
-        console.error('Remove peer failed for session ' + sessionID + '.',
-            'Session ' + sessionID + ' does not exist. Create it with the "new_session" event before trying to modify it.');
-        return;
+const removePeer = (peerId) => {
+    // Iterate over the sessions and find out which session the peer is in and remove the peer from that
+    for(sessionId in sessions){
+        if(sessions[sessionId].peers.includes(peerId)){
+            sessions[sessionId].peers = sessions[sessionId].peers.filter(peer => peerId !== peer);
+            
+            // persisting the change to the disk
+            writeToFile(sessionId, sessions[sessionId]);
+            break;
+        }
     }
-    sessions[sessionID].peers = sessions[sessionID].peers.filter(peer => newPeer !== peer);
 }
 
 const getSessionList = () => {
@@ -78,6 +84,11 @@ const getDocument = (sessionID) => {
     return sessions[sessionID].data;
 }
 
+const updateSessionData = (sessionID, index, value) => {
+    sessions[sessionID].data[index] = value;
+    writeToFile(sessionID, sessions[sessionID]);
+}
+
 module.exports = {
     loadSessions,
     saveSession,
@@ -85,5 +96,6 @@ module.exports = {
     addPeer,
     removePeer,
     getSessionList,
-    getDocument
+    getDocument,
+    updateSessionData
 }

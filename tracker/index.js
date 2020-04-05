@@ -22,6 +22,7 @@ peerServer.on('connection', peer => {
 });
 
 peerServer.on('disconnect', peer => {
+  peerRoute.removePeer(peer.id);
   console.log('\nlost peerjs connection: ' + peer.id);
 });
 
@@ -58,7 +59,11 @@ io.on("connection", peer => {
   // Get document data request
   peer.on('get_doc_req', session_id => {
     const document = peerRoute.getDocument(session_id)
-    socket.emit('get_doc_res', { doc: document });
+    peer.emit('get_doc_res', { doc: document });
+  });
+
+  peer.on('cell_update', data => {
+    peerRoute.updateSessionData(data.session_id, data.index, data.value);
   });
 
   peer.on("disconnect", () => console.log("lost socket.io connection " + peer.id));

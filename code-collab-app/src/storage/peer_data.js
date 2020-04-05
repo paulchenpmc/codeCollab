@@ -53,16 +53,20 @@ const peer_data = observable({
             this.request_doc_data();
         });
         this.tracker.on(GET_DOC_RES, data => {
-            this.doc_data.push(...data);
+            this.doc_data.push(...data.doc);
         });
     },
 
-    reset(){
+    reset(sessionId){
+        if(sessionId !== null && sessionId === this.current_session_id){
+            return;
+        }
         console.log('reseting all the values');
         this.session_peers = [];
         this.session_peers_conn = [];
         if(this.peer !== null){
             this.peer.destroy();
+            this.peer = null;
         }
         this.peer_id = '';
         this.current_session = '';
@@ -74,7 +78,6 @@ const peer_data = observable({
     },
 
     create_new_session(session_name) {
-        this.reset();
         this.peer = new Peer(config);
 
         this.peer.on('open', id => {
@@ -93,7 +96,11 @@ const peer_data = observable({
 
     //  Join an active session or open preexisted doc
     join_session(session_name, session_id) {
-        this.reset();
+        // we are already connected to this session, so no need to reconnect
+        if(this.peer !== null){
+            return;
+        }
+
         this.current_session = session_name;
         this.current_session_id = session_id;
 
@@ -228,24 +235,12 @@ const peer_data = observable({
         this.send_cell_update(this.doc_data.length - 1);
     },
 
-    update_existing_cell(index, value){
-        this.doc_data[index] = value;
-    },
-
-    set_current_cell(index){
-        this.current_cell = index;
-    },
-
     increment_cell_count(){
         this.cell_count += 1;
     },
 
-    set_cell_locked(index, value){
-        this.cell_locked[index] = value;
-    },
-
     send_cell_update(key){
-        // broadcast to cell
+        // broadcasting the cell value to other peers
         console.log('sending the cell update to all the peers');
         if(this.session_peers_conn !== null){
             this.session_peers_conn.forEach(peer_conn => {
@@ -258,11 +253,16 @@ const peer_data = observable({
                 });
             });
         }
+
+        // send the cell value to tracker
+        this.tracker.emit(CELL_UPDATE, {
+                session_id: this.current_session_id,
+                index: key,
+                value: this.doc_data[key]
+            }
+        );
     },
 
-    get_current_cell(){
-        return this.current_cell;
-    }
 },
 {
     initialize: action,
@@ -270,11 +270,7 @@ const peer_data = observable({
     join_session: action,
     upload_document: action,
     add_new_cell: action,
-    update_existing_cell: action,
-    set_current_cell: action,
-    set_cell_locked: action,
     send_cell_update: action,
-    get_current_cell: action,
 });
 
 export default peer_data;

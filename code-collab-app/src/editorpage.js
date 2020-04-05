@@ -11,11 +11,6 @@ import { inject, observer } from 'mobx-react';
 class Editorpage extends React.Component {
   constructor(props){
     super(props);
-
-    this.state = {
-      cellText: this.props.peer_data.doc_data,
-      cellLocked: this.props.peer_data.cell_locked,
-    }
   }
 
   componentDidMount() {
@@ -36,14 +31,13 @@ class Editorpage extends React.Component {
   // key: the index of the cell to lock
   lockEditorCell = (key) => {
     // Lock cell so user may not edit
-    this.props.peer_data.set_cell_locked(key, true);
+    this.props.peer_data.cell_locked[key] = true;
   }
 
   // Unlock a cell so the user may edit it
   // key: the index of the cell to unlock
   unlockEditorCell = (key) => {
-    this.props.peer_data.set_cell_locked(key, false);
-
+    this.props.peer_data.cell_locked[key] = false;
   }
 
   // Requests lock on cell from all peers in session
@@ -74,7 +68,7 @@ class Editorpage extends React.Component {
     const lockApproved = this.requestEditorCellLock(key);
     if (lockApproved === false) return;
     // Remember the cell currently being edited
-    this.props.peer_data.set_current_cell(key);
+    this.props.peer_data.current_cell = key;
   }
 
   // Event handler for cursor leaving a cell. Broadcasts update for that cell and releases lock.
@@ -83,14 +77,14 @@ class Editorpage extends React.Component {
   leaveCellEvent = (e) => {
     e.preventDefault();
     // Get index of last cell edited
-    const lastCellEdited = this.props.peer_data.get_current_cell();
+    const lastCellEdited = this.props.peer_data.current_cell;
     if (lastCellEdited === null) return;
 
     // Broadcast updates to cell just released from editing
     this.broadcastCellUpdate(lastCellEdited);
 
     // Reset cell last edited state
-    this.props.peer_data.set_current_cell(null);
+    this.props.peer_data.current_cell = null;
   }
 
   // Event handler for button click to add new blank editor cell.
@@ -108,7 +102,7 @@ class Editorpage extends React.Component {
     }
 
     let cellLabel = "Cell " + keyvalue.toString();
-    let disableCell = this.state.cellLocked[keyvalue];
+    let disableCell = this.props.peer_data.cell_locked[keyvalue];
     let textProps = {
       style: {
         color: 'white'
@@ -133,7 +127,7 @@ class Editorpage extends React.Component {
         onBlur={(e) => this.leaveCellEvent(e)} // When cursor leaves cell
         fullWidth
         disabled={disableCell}
-        value={this.state.cellText[keyvalue]}
+        value={this.props.peer_data.doc_data[keyvalue]}
         variant="filled"
         InputLabelProps={{
           style: {
@@ -142,7 +136,7 @@ class Editorpage extends React.Component {
         }}
         InputProps={textProps}
         onChange={(event) => {
-          this.props.peer_data.update_existing_cell(keyvalue, event.target.value);
+          this.props.peer_data.doc_data[keyvalue] = event.target.value;
         }}
       />
       );
@@ -157,7 +151,7 @@ class Editorpage extends React.Component {
         <body className="App-editor">
           <div className="box-container">
             {
-              this.state.cellText.map((cellContents, index) => (
+              this.props.peer_data.doc_data.map((cellContents, index) => (
                 <React.Fragment key={index}>
                   { this.renderTextbox(index, cellContents) }
                 </React.Fragment>))
