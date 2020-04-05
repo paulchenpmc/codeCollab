@@ -2,6 +2,10 @@ import Peer from 'peerjs';
 import { observable, action } from 'mobx';
 import io from 'socket.io-client';
 
+const GET_DOC_REQ = 'get_doc_req';
+const GET_DOC_RES = 'get_doc_res';
+
+
 // Tracker server config for peerjs
 const config = {
         host: 'localhost',
@@ -20,17 +24,57 @@ const peer_data = observable({
     current_session: '',
     current_session_id: '',
     tracker: null,
-    doc_data: ['Hello World.', 'This is a test.'],
+    doc_data: [],
+    current_cell: null,
+    cell_count: 0,
+    cell_locked: [],
 
     initialize() {
         // will change later, hard coded for now
-        this.tracker = io('http://localhost:8001/');
+        if(this.tracker === null){
+            this.tracker = io('http://localhost:8001/');
+            this.attach_tracker_callbacks();
+        }
+    },
+    
+    attach_tracker_callbacks(){
         this.tracker.on('session_list', list => {
             this.session_list = list;
         });
+        this.tracker.on('session_created', session_info => {
+            console.log('new session created.');
+            this.current_session = session_info.session_name;
+            this.current_session_id = session_info.session_id;
+        });
+        //  wait for a list of peers currently in the session
+        this.tracker.on('peer_list', list => {
+            console.log('existing session joined.');
+            this.session_peers = list.filter(peerId => peerId !== this.peer_id);
+            this.request_doc_data();
+        });
+        this.tracker.on(GET_DOC_RES, data => {
+            this.doc_data.push(...data);
+        });
+    },
+
+    reset(){
+        console.log('reseting all the values');
+        this.session_peers = [];
+        this.session_peers_conn = [];
+        if(this.peer !== null){
+            this.peer.destroy();
+        }
+        this.peer_id = '';
+        this.current_session = '';
+        this.current_session_id = '';
+        this.doc_data = [];
+        this.current_cell = null;
+        this.cell_count = 0;
+        this.cell_locked = [];
     },
 
     create_new_session(session_name) {
+        this.reset();
         this.peer = new Peer(config);
 
         this.peer.on('open', id => {
@@ -42,17 +86,14 @@ const peer_data = observable({
             };
 
             //  inform tracker new session info
+            console.log('creating new session...');
             this.tracker.emit('new_session', peer_info);
-
-            this.tracker.on('session_created', session_info => {
-                this.current_session = session_info.session_name;
-                this.current_session_id = session_info.session_id;
-            });
         })
     },
 
     //  Join an active session or open preexisted doc
     join_session(session_name, session_id) {
+        this.reset();
         this.current_session = session_name;
         this.current_session_id = session_id;
 
@@ -68,39 +109,49 @@ const peer_data = observable({
             };
 
             //  Request list of peers in <session_name> session
+            console.log('joining existing session...');
             this.tracker.emit('join_session', peer_info);
-
-            //  wait for a list of peers currently in the session
-            this.tracker.on('peer_list', list => {
-                this.session_peers = list;
-                this.request_doc_data();
-            });
         });
     },
 
-    //  request for current session's doc data 
-    //  from a fellow peer
+    //  request doc data from a peer
     request_doc_data() {
-        //  check the number of peers in current session
-        //  if == 0, then no need to connect to other peers
+        // if peers exist, ask data from them otherwise ask the tracker
         if (this.session_peers.length !== 0) {
             //  connect with all peers
-            this.session_peers.forEach( (p, i) => {
-                this.session_peers_conn[i] = this.peer.connect(p);
-            });
+            this.session_peers.forEach((peerId, index) => {
+                this.session_peers_conn[index] = this.peer.connect(peerId);
 
-            //  request doc data from one of them
-            this.session_peers_conn[0].on('open', () => {
-                this.session_peers_conn[0].send('get doc');
-            });
+                this.session_peers_conn[index].on('open', () => {
+                    
+                    // ask the first peer for document data
+                    if(index === 0){
+                        this.session_peers_conn[index].send({
+                            message_type: GET_DOC_REQ 
+                        });
+                    }
 
-            this.session_peers_conn[0].on('error', err => {
-                console.log(err);
-            });
+                    // setting up data callback
+                    this.session_peers_conn[index].on('data', data => {
+                        this.handle_data_from_peers(data, this.session_peers_conn[index])
+                    });
 
-            this.session_peers_conn[0].on('data', data => {
-                console.log(data);
+                    // listening to errors on any data connections
+                    this.session_peers_conn[index].on('error', error => {
+                        this.handle_error_from_peers(error);
+                    });
+
+                    // listening to errors on any data connections
+                    this.session_peers_conn[index].on('close', () => {
+                        this.handle_peer_disconnect(this.session_peers_conn[index]);
+                    });                    
+                });
+
             });
+        }
+        else{
+            // Making a call to the tracker to get doc data
+            this.tracker.emit(GET_DOC_REQ, this.current_session_id);
         }
     },
 
@@ -108,24 +159,89 @@ const peer_data = observable({
     //  and their request for the doc data
     listen_for_req() {
         this.peer.on('connection', dataConnection => {
-            dataConnection.on('error', err => {
-                console.log("listen for req err: " + err);
-            });
+            // adding the newly connected peer to the list
+            dataConnection.on('open', () => {
+                this.session_peers.push(dataConnection.peer);
+                this.session_peers_conn.push(dataConnection);
 
-            dataConnection.on('data', data => {
-                dataConnection.send(this.doc_data);
+                dataConnection.on('error', error => {
+                    this.handle_error_from_peers(error);
+                });
+    
+                dataConnection.on('data', data => {
+                    this.handle_data_from_peers(data, dataConnection);
+                });
+    
+                // listening to errors on any data connections
+                dataConnection.on('close', () => {
+                    this.handle_peer_disconnect(dataConnection);
+                });                       
             });
         });
     },
 
-    upload_document(d) {
-        this.doc_data = d;
+    handle_data_from_peers(data, dataConnection){
+        // Received a get doc request
+        if(data.message_type && data.message_type === GET_DOC_REQ){
+            console.log('received a get doc data request from another peer, sending data...');
+            dataConnection.send({
+                message_type: GET_DOC_RES,
+                content: this.doc_data
+            });
+        }
+        // Received a get doc response
+        else if(data.message_type && data.message_type === GET_DOC_RES && data.content){
+            console.log('received doc data from another peer');
+            this.doc_data.push(...data.content);
+        }
+        else{
+            // TODO -- do something more with this data
+            console.log(data);
+        }
+    },
+
+    handle_error_from_peers(error){
+        console.log(error);
+    },
+
+    handle_peer_disconnect(data_connection){
+        console.log('a peer has been disconnected');
+        // remove the disconnected peer
+        this.session_peers = this.session_peers.filter(peerId => peerId !== data_connection.peer);
+        this.session_peers_conn = this.session_peers_conn.filter(conn => conn.peer !== data_connection.peer);
+    },
+
+    upload_document(new_data) {
+        this.doc_data.push(...new_data);
     },
 
     // Get document data from the tracker if no peer active for the document
     get_document_data(session_id) {
         this.tracker.emit('get_doc_data', session_id);
+    },
+
+    add_new_cell(cell_contents){
+        this.doc_data.push(cell_contents);
+        this.cell_locked.push(false);
+        this.increment_cell_count();
+    },
+
+    update_existing_cell(index, value){
+        this.doc_data[index] = value;
+    },
+
+    set_current_cell(index){
+        this.current_cell = index;
+    },
+
+    increment_cell_count(){
+        this.count += 1;
+    },
+
+    set_cell_lock(index, value){
+        this.cell_locked[index] = value;
     }
+
 },
 {
     initialize: action,
@@ -133,6 +249,10 @@ const peer_data = observable({
     join_session: action,
     upload_document: action,
     get_document_data: action,
+    add_new_cell: action,
+    update_existing_cell: action,
+    set_current_cell: action,
+    set_cell_lock: action,
 });
 
 export default peer_data;

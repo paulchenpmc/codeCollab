@@ -6,39 +6,22 @@ import logo from './codeCollabLogo.png';
 import './App.css';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
+import { inject, observer } from 'mobx-react';
 
 class Editorpage extends React.Component {
   constructor(props){
     super(props);
 
     this.state = {
-      cellCount: 0,
-      cellText: (this.props.location.data) ? this.props.location.data : [],
-      cellLocked: [],
-      cellCurrentlyEditing: null,
+      cellCount: this.props.peer_data.cell_count,
+      cellText: this.props.peer_data.doc_data,
+      cellLocked: this.props.peer_data.cell_locked,
+      cellCurrentlyEditing: this.props.peer_data.current_cell,
     }
   }
 
   componentDidMount() {
-    if(this.state.cellText.length === 0){
-      this.addEditorCell('print("Hello World!")');
-    }
-    this.props.location.peer.listen_for_req();
-  }
-
-  setCellText = (keyvalue, cellContents) => {
-    // Theoretically this is a nicer way to update state,
-    //     but it interprets keyvalue as a literal string so it doesn't index properly :/
-    // this.setState({
-    //   cellText: update(this.state.cellText, {keyvalue: {$set: event.target.value}})
-    // });
-
-    // 1. Make a shallow copy of the cellText
-    let cellTextCopy = [...this.state.cellText];
-    // 2. Mutate local copy to set realtime text contents of cell
-    cellTextCopy[keyvalue] = cellContents;
-    // 3. Set the state to our new copy
-    this.setState({cellText: cellTextCopy});
+    this.props.peer_data.listen_for_req();
   }
 
   // Appends an editor cell with supplied text.
@@ -47,36 +30,22 @@ class Editorpage extends React.Component {
     if (!cellContents) {
       cellContents = '';
     }
-
-    this.setState({
-      cellText: this.state.cellText.concat(cellContents),
-      cellLocked: this.state.cellLocked.concat(false),
-    });
-
-    this.setState({
-      cellCount: this.state.cellCount + 1,
-    });
+    this.props.peer_data.add_new_cell(cellContents);
+    // TODO - maybe call peer_data method to update other peers
   }
 
   // Locks a cell so the user cannot edit it
   // key: the index of the cell to lock
   lockEditorCell = (key) => {
     // Lock cell so user may not edit
-    let temp = this.state.cellLocked;
-    temp[key] = true;
-    this.setState({ cellLocked:temp });
+    this.props.peer_data.set_cell_locked(key, true);
   }
 
-  // Update cell text, then Unlock a cell so the user may edit it
+  // Unlock a cell so the user may edit it
   // key: the index of the cell to unlock
-  // updatedCellContents: updated cell text to apply to the cell
-  unlockEditorCell = (key, updatedCellContents) => {
-    // Update cell with new text
-    this.setCellText(key, updatedCellContents);
-    // Unlock cell
-    let temp = this.state.cellLocked;
-    temp[key] = false;
-    this.setState({ cellLocked:temp });
+  unlockEditorCell = (key) => {
+    this.props.peer_data.set_cell_locked(key, false);
+
   }
 
   // Requests lock on cell from all peers in session
@@ -91,7 +60,7 @@ class Editorpage extends React.Component {
   // Broadcast cell update and release lock for all other peers in session
   // key: index of cell
   // cellContents: text contents of the cell update
-  broadcastCellUpdate = (key, cellContents) => {
+  broadcastCellUpdate = (key) => {
     // TODO - implement socket.io broadcast to update cell for all other peers and release lock
     // Will probably involve calling unlockEditorCell()
     console.log('Broadcasting cell update to peers for cell ' + key);
@@ -106,7 +75,7 @@ class Editorpage extends React.Component {
     const lockApproved = this.requestEditorCellLock(key);
     if (lockApproved === false) return;
     // Remember the cell currently being edited
-    this.setState({ cellCurrentlyEditing:key });
+    this.props.peer_data.set_current_cell(key);
   }
 
   // Event handler for cursor leaving a cell. Broadcasts update for that cell and releases lock.
@@ -119,11 +88,10 @@ class Editorpage extends React.Component {
     if (lastCellEdited === null) return;
 
     // Broadcast updates to cell just released from editing
-    let text = this.state.cellText[lastCellEdited]; // Select that cell and extract the text
-    this.broadcastCellUpdate(lastCellEdited, text);
+    this.broadcastCellUpdate(lastCellEdited);
 
     // Reset cell last edited state
-    this.setState({ cellCurrentlyEditing:null });
+    this.props.peer_data.set_current_cell(null);
   }
 
   // Event handler for button click to add new blank editor cell.
@@ -175,7 +143,7 @@ class Editorpage extends React.Component {
         }}
         InputProps={textProps}
         onChange={(event) => {
-          this.setCellText(keyvalue, event.target.value);
+          this.props.peer_data.update_existing_cell(keyvalue, event.target.value);
         }}
       />
       );
@@ -205,4 +173,4 @@ class Editorpage extends React.Component {
   }
 }
 
-export default Editorpage;
+export default inject('peer_data')(observer(Editorpage));
