@@ -7,6 +7,8 @@ import './App.css';
 import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
 import { inject, observer } from 'mobx-react';
+import { Button } from 'react-bootstrap';
+import { saveAs } from 'file-saver';
 
 class Editorpage extends React.Component {
   constructor(props){
@@ -51,7 +53,7 @@ class Editorpage extends React.Component {
   requestEditorCellLock = (key) => {
     // TODO - implement socket.io request to lock this cell on all other peers in session
     // Will probably involve calling lockEditorCell()
-    console.log('Requesting cell lock from all peers for cell ' + key);
+    console.log('Cell ' + key + ': Requesting cell lock from all peers');
     return true;
   }
 
@@ -98,6 +100,22 @@ class Editorpage extends React.Component {
   handleNewCellButtonClick = (e) => {
     e.preventDefault();
     this.addEditorCell();
+  }
+
+  // Event handler for download document button.
+  // e: button click event
+  handleDownloadDocumentClick = (e) => {
+    e.preventDefault();
+    const cellDivider = '\n--------------------------------------------------------------\n';
+    let documentString = '';
+    for (let i = 0; i < this.state.cellText.length; i++) {
+      if (i !== 0) {
+        documentString += cellDivider;
+      }
+      documentString += this.state.cellText[i];
+    }
+    var blob = new Blob([documentString], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, "codeCollabDocument.txt"); // Opens file dialog on client with this as default filename
   }
 
   // Creates html for new editor cell.
@@ -152,7 +170,10 @@ class Editorpage extends React.Component {
     return(
       <div className="App">
         <header className="App-header">
-          <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>
+          <span>
+            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
+            <Button onClick={this.handleDownloadDocumentClick} variant='dark'>Download Document</Button>{'  '}
+          </span>
         </header>
         <body className="App-editor">
           <div className="box-container">

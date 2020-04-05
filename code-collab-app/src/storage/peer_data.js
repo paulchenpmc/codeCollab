@@ -36,7 +36,7 @@ const peer_data = observable({
             this.attach_tracker_callbacks();
         }
     },
-    
+
     attach_tracker_callbacks(){
         this.tracker.on('session_list', list => {
             this.session_list = list;
@@ -123,11 +123,11 @@ const peer_data = observable({
                 this.session_peers_conn[index] = this.peer.connect(peerId);
 
                 this.session_peers_conn[index].on('open', () => {
-                    
+
                     // ask the first peer for document data
                     if(index === 0){
                         this.session_peers_conn[index].send({
-                            message_type: GET_DOC_REQ 
+                            message_type: GET_DOC_REQ
                         });
                     }
 
@@ -144,7 +144,7 @@ const peer_data = observable({
                     // listening to errors on any data connections
                     this.session_peers_conn[index].on('close', () => {
                         this.handle_peer_disconnect(this.session_peers_conn[index]);
-                    });                    
+                    });
                 });
 
             });
@@ -167,15 +167,15 @@ const peer_data = observable({
                 dataConnection.on('error', error => {
                     this.handle_error_from_peers(error);
                 });
-    
+
                 dataConnection.on('data', data => {
                     this.handle_data_from_peers(data, dataConnection);
                 });
-    
+
                 // listening to errors on any data connections
                 dataConnection.on('close', () => {
                     this.handle_peer_disconnect(dataConnection);
-                });                       
+                });
             });
         });
     },
@@ -246,7 +246,7 @@ const peer_data = observable({
 
     send_cell_update(key){
         // broadcast to cell
-        console.log('sending the cell update to all the peers');
+        console.log('Cell ' + key + ': Sending cell update to all peers');
         if(this.session_peers_conn !== null){
             this.session_peers_conn.forEach(peer_conn => {
                 peer_conn.send({
