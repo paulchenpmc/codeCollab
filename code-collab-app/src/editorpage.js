@@ -13,10 +13,18 @@ import { saveAs } from 'file-saver';
 class Editorpage extends React.Component {
   constructor(props){
     super(props);
+
+    this.state = {
+      lockTimeoutID: 0,
+    }
   }
 
   componentDidMount() {
     this.props.peer_data.listen_for_req();
+  }
+
+  componentWillUnmount() {
+    this.clearLockTimer(); // Always clean up before unmounting
   }
 
   // Appends an editor cell with supplied text.
@@ -59,6 +67,29 @@ class Editorpage extends React.Component {
     // Will probably involve calling unlockEditorCell()
     // call method from peer_data to update other peers // sending updates
     this.props.peer_data.send_cell_update(key);
+
+    // Reset cell last edited state
+    this.props.peer_data.current_cell = null;
+  }
+
+  startLockTimer = () => {
+    // Timer will execute arrow function below when it expires
+    let timeoutID = window.setTimeout(
+      () => {
+        // Broadcast updates to cell just released from editing
+        this.broadcastCellUpdate(this.props.peer_data.current_cell);
+
+        // Force blur event on cell (remove cursor from cell)
+        document.activeElement.blur();
+      },
+    10*1000); // 10 Second timeout for cell lock release
+    if (this.state.lockTimeoutID !== null) this.clearLockTimer();
+    this.setState({ lockTimeoutID:timeoutID });
+  }
+
+  clearLockTimer = () => {
+    window.clearTimeout(this.state.lockTimeoutID);
+    this.setState({ lockTimeoutID:null });
   }
 
   // Event handler for cursor entering a cell. Requests a lock on the cell from all peers.
@@ -69,8 +100,12 @@ class Editorpage extends React.Component {
     // Request lock on cell from all peers
     const lockApproved = this.requestEditorCellLock(key);
     if (lockApproved === false) return;
+
     // Remember the cell currently being edited
     this.props.peer_data.current_cell = key;
+
+    // Start timer to check for lock starvation
+    this.startLockTimer();
   }
 
   // Event handler for cursor leaving a cell. Broadcasts update for that cell and releases lock.
@@ -78,15 +113,16 @@ class Editorpage extends React.Component {
   // key: index of cell
   leaveCellEvent = (e) => {
     e.preventDefault();
+
+    // Clear lock timer
+    this.clearLockTimer();
+
     // Get index of last cell edited
     const lastCellEdited = this.props.peer_data.current_cell;
     if (lastCellEdited === null) return;
 
     // Broadcast updates to cell just released from editing
     this.broadcastCellUpdate(lastCellEdited);
-
-    // Reset cell last edited state
-    this.props.peer_data.current_cell = null;
   }
 
   // Event handler for button click to add new blank editor cell.
@@ -154,7 +190,11 @@ class Editorpage extends React.Component {
         }}
         InputProps={textProps}
         onChange={(event) => {
+          // Update data structure with cell text
           this.props.peer_data.doc_data[keyvalue] = event.target.value;
+
+          // Reset starvation clock timer to zero
+          this.startLockTimer();
         }}
       />
       );
