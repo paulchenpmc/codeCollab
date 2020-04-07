@@ -234,9 +234,9 @@ const peer_data = observable({
                 }
                 // we also lock if we are working on something that the other peer requested first
                 else if(this.current_cell && this.current_cell === data.content.index && this.cell_lock_time > data.content.time){
-                    this.cell_locked[data.content.index] = true;
                     this.current_cell = null;
                     this.cell_lock_time = null;
+                    this.cell_locked[data.content.index] = true;
                 }
                 // otherwise ignore the request, because we requested this cell first
             }
