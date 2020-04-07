@@ -8,10 +8,10 @@ import IconButton from '@material-ui/core/IconButton';
 import AddIcon from '@material-ui/icons/Add';
 import { inject, observer } from 'mobx-react';
 
+const UNLOCK_CELL = 'unlock_cell';
+const LOCK_CELL = 'lock_cell';
+
 class Editorpage extends React.Component {
-  constructor(props){
-    super(props);
-  }
 
   componentDidMount() {
     this.props.peer_data.listen_for_req();
@@ -25,28 +25,6 @@ class Editorpage extends React.Component {
     }
     // peer_data updates the locked value, count and updates other peers
     this.props.peer_data.add_new_cell(cellContents);
-  }
-
-  // Locks a cell so the user cannot edit it
-  // key: the index of the cell to lock
-  lockEditorCell = (key) => {
-    // Lock cell so user may not edit
-    this.props.peer_data.cell_locked[key] = true;
-  }
-
-  // Unlock a cell so the user may edit it
-  // key: the index of the cell to unlock
-  unlockEditorCell = (key) => {
-    this.props.peer_data.cell_locked[key] = false;
-  }
-
-  // Requests lock on cell from all peers in session
-  // key: index of cell
-  requestEditorCellLock = (key) => {
-    // TODO - implement socket.io request to lock this cell on all other peers in session
-    // Will probably involve calling lockEditorCell()
-    console.log('Requesting cell lock from all peers for cell ' + key);
-    return true;
   }
 
   // Broadcast cell update and release lock for all other peers in session
@@ -64,9 +42,10 @@ class Editorpage extends React.Component {
   // key: index of cell
   selectCellEvent = (e, key) => {
     e.preventDefault();
+    
     // Request lock on cell from all peers
-    const lockApproved = this.requestEditorCellLock(key);
-    if (lockApproved === false) return;
+    this.props.peer_data.update_cell_lock(key, LOCK_CELL);
+
     // Remember the cell currently being edited
     this.props.peer_data.current_cell = key;
   }
@@ -85,6 +64,9 @@ class Editorpage extends React.Component {
 
     // Reset cell last edited state
     this.props.peer_data.current_cell = null;
+
+    // unlock the cell
+    this.props.peer_data.update_cell_lock(lastCellEdited, UNLOCK_CELL);
   }
 
   // Event handler for button click to add new blank editor cell.
@@ -112,7 +94,7 @@ class Editorpage extends React.Component {
       textProps = {
         style: {
           color: 'white',
-          background: '#de5246'
+          backgroundColor: '#de5246',
         }
       }
     }
