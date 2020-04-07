@@ -35,6 +35,12 @@ class Editorpage extends React.Component {
     // Will probably involve calling unlockEditorCell()
     // call method from peer_data to update other peers // sending updates
     this.props.peer_data.send_cell_update(key);
+
+    // Reset cell last edited state
+    this.props.peer_data.current_cell = null;
+
+    // unlock the cell
+    this.props.peer_data.update_cell_lock(key, UNLOCK_CELL);    
   }
 
   // Event handler for cursor entering a cell. Requests a lock on the cell from all peers.
@@ -61,12 +67,6 @@ class Editorpage extends React.Component {
 
     // Broadcast updates to cell just released from editing
     this.broadcastCellUpdate(lastCellEdited);
-
-    // Reset cell last edited state
-    this.props.peer_data.current_cell = null;
-
-    // unlock the cell
-    this.props.peer_data.update_cell_lock(lastCellEdited, UNLOCK_CELL);
   }
 
   // Event handler for button click to add new blank editor cell.
