@@ -108,11 +108,11 @@ class Editorpage extends React.Component {
     e.preventDefault();
     const cellDivider = '\n--------------------------------------------------------------\n';
     let documentString = '';
-    for (let i = 0; i < this.state.cellText.length; i++) {
+    for (let i = 0; i < this.props.peer_data.doc_data.length; i++) {
       if (i !== 0) {
         documentString += cellDivider;
       }
-      documentString += this.state.cellText[i];
+      documentString += this.props.peer_data.doc_data[i];
     }
     var blob = new Blob([documentString], {type: "text/plain;charset=utf-8"});
     saveAs(blob, "codeCollabDocument.txt"); // Opens file dialog on client with this as default filename
