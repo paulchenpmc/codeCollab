@@ -241,7 +241,7 @@ const peer_data = observable({
 
     send_cell_update(key){
         // broadcasting the cell value to other peers
-        console.log('Broadcasting update for cell ' + key);
+        console.log('Cell ' + key + ': Sending cell update to all peers');
         if(this.session_peers_conn !== null){
             this.session_peers_conn.forEach(peer_conn => {
                 peer_conn.send({
