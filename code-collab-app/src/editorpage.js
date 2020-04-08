@@ -10,6 +10,9 @@ import { inject, observer } from 'mobx-react';
 import { Button } from 'react-bootstrap';
 import { saveAs } from 'file-saver';
 
+const UNLOCK_CELL = 'unlock_cell';
+const LOCK_CELL = 'lock_cell';
+
 class Editorpage extends React.Component {
   constructor(props){
     super(props);
@@ -37,28 +40,6 @@ class Editorpage extends React.Component {
     this.props.peer_data.add_new_cell(cellContents);
   }
 
-  // Locks a cell so the user cannot edit it
-  // key: the index of the cell to lock
-  lockEditorCell = (key) => {
-    // Lock cell so user may not edit
-    this.props.peer_data.cell_locked[key] = true;
-  }
-
-  // Unlock a cell so the user may edit it
-  // key: the index of the cell to unlock
-  unlockEditorCell = (key) => {
-    this.props.peer_data.cell_locked[key] = false;
-  }
-
-  // Requests lock on cell from all peers in session
-  // key: index of cell
-  requestEditorCellLock = (key) => {
-    // TODO - implement socket.io request to lock this cell on all other peers in session
-    // Will probably involve calling lockEditorCell()
-    console.log('Cell ' + key + ': Requesting cell lock from all peers');
-    return true;
-  }
-
   // Broadcast cell update and release lock for all other peers in session
   // key: index of cell
   // cellContents: text contents of the cell update
@@ -70,6 +51,9 @@ class Editorpage extends React.Component {
 
     // Reset cell last edited state
     this.props.peer_data.current_cell = null;
+
+    // unlock the cell
+    this.props.peer_data.update_cell_lock(key, UNLOCK_CELL);    
   }
 
   startLockTimer = () => {
@@ -97,9 +81,9 @@ class Editorpage extends React.Component {
   // key: index of cell
   selectCellEvent = (e, key) => {
     e.preventDefault();
+    
     // Request lock on cell from all peers
-    const lockApproved = this.requestEditorCellLock(key);
-    if (lockApproved === false) return;
+    this.props.peer_data.update_cell_lock(key, LOCK_CELL);
 
     // Remember the cell currently being edited
     this.props.peer_data.current_cell = key;
@@ -166,7 +150,7 @@ class Editorpage extends React.Component {
       textProps = {
         style: {
           color: 'white',
-          background: '#de5246'
+          backgroundColor: '#de5246',
         }
       }
     }
