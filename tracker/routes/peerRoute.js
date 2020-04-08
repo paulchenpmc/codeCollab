@@ -9,7 +9,7 @@ const loadSessions = async () => {
     console.log('Tracker documents loaded.\n')
 }
 
-const addSession = (document_name, peer) => {
+const addSession = (document_name, peer, doc_data) => {
     const sessionID = generateId();
     console.log('\nCreating a new session for ' + document_name + ' with session id ' + sessionID);
 
@@ -17,8 +17,9 @@ const addSession = (document_name, peer) => {
         id: sessionID,
         document_name: document_name,
         peers: [peer],
-        data: []
+        data: doc_data
     }
+    writeToFile(sessionID, sessions[sessionID]);
     return sessions[sessionID];
 }
 

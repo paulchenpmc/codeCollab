@@ -38,10 +38,11 @@ io.on("connection", peer => {
 
   // Create new session
   peer.on('new_session', data => {
-    const session = peerRoute.addSession(data.session_name, data.peer_id);
+    const session = peerRoute.addSession(data.session_name, data.peer_id, data.data);
     peer.emit("session_created", {
       session_id: session.id,
-      session_name: session.document_name
+      session_name: session.document_name,
+      data: session.data
     });
 
     peerRoute.saveSession(session.id, session.data);

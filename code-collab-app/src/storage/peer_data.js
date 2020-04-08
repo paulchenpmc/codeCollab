@@ -48,6 +48,9 @@ const peer_data = observable({
             console.log('new session created.');
             this.current_session = session_info.session_name;
             this.current_session_id = session_info.session_id;
+
+            this.cell_locked = Array(session_info.data.length).fill(false);
+            this.doc_data = [...session_info.data];
         });
         //  wait for a list of peers currently in the session
         this.tracker.on('peer_list', list => {
@@ -81,7 +84,7 @@ const peer_data = observable({
         this.cell_locked = [];
     },
 
-    create_new_session(session_name) {
+    create_new_session(session_name, data = []) {
         this.peer = new Peer(config);
 
         this.peer.on('open', id => {
@@ -89,7 +92,8 @@ const peer_data = observable({
 
             let peer_info = {
                 "session_name": session_name,
-                "peer_id": this.peer_id
+                "peer_id": this.peer_id,
+                "data": data
             };
 
             //  inform tracker new session info
@@ -258,10 +262,6 @@ const peer_data = observable({
         this.session_peers_conn = this.session_peers_conn.filter(conn => conn.peer !== data_connection.peer);
     },
 
-    upload_document(new_data) {
-        this.doc_data.push(...new_data);
-    },
-
     add_new_cell(cell_contents){
         this.cell_locked.push(false);
         this.doc_data.push(cell_contents);
@@ -318,7 +318,6 @@ const peer_data = observable({
     initialize: action,
     create_new_session: action,
     join_session: action,
-    upload_document: action,
     add_new_cell: action,
     send_cell_update: action,
     update_cell_lock: action,
