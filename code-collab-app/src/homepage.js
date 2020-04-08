@@ -103,7 +103,7 @@ class Homepage extends React.Component {
         <body>
           <div>
             {this.state.showPopup ?
-              <Popup peer={this.props.peer_data} closePopup={this.togglePopup.bind(this)}/>
+              <Popup peer={this.props.peer_data} history={this.props.history} closePopup={this.togglePopup.bind(this)}/>
               : null}
           </div>
           <div className="container">
