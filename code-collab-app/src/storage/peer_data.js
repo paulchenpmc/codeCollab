@@ -48,6 +48,9 @@ const peer_data = observable({
             console.log('new session created.');
             this.current_session = session_info.session_name;
             this.current_session_id = session_info.session_id;
+
+            this.cell_locked = Array(session_info.data.length).fill(false);
+            this.doc_data = [...session_info.data];
         });
         //  wait for a list of peers currently in the session
         this.tracker.on('peer_list', list => {
@@ -81,7 +84,7 @@ const peer_data = observable({
         this.cell_locked = [];
     },
 
-    create_new_session(session_name) {
+    create_new_session(session_name, data = []) {
         this.peer = new Peer(config);
 
         this.peer.on('open', id => {
@@ -89,7 +92,8 @@ const peer_data = observable({
 
             let peer_info = {
                 "session_name": session_name,
-                "peer_id": this.peer_id
+                "peer_id": this.peer_id,
+                "data": data
             };
 
             //  inform tracker new session info
