@@ -262,10 +262,6 @@ const peer_data = observable({
         this.session_peers_conn = this.session_peers_conn.filter(conn => conn.peer !== data_connection.peer);
     },
 
-    upload_document(new_data) {
-        this.doc_data.push(...new_data);
-    },
-
     add_new_cell(cell_contents){
         this.cell_locked.push(false);
         this.doc_data.push(cell_contents);
@@ -322,7 +318,6 @@ const peer_data = observable({
     initialize: action,
     create_new_session: action,
     join_session: action,
-    upload_document: action,
     add_new_cell: action,
     send_cell_update: action,
     update_cell_lock: action,
