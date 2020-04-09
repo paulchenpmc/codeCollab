@@ -19,7 +19,7 @@ class Popup extends React.Component {
   };
 
   handleFileRead = (e) => {
-    let divider = "--------------------------------------------------------------";
+    let divider = "\n--------------------------------------------------------------\n";
     let file_content = this.file_reader.result.split(divider);
     let data = [];
     for(let i = 0; i < file_content.length; i++) {

@@ -30,12 +30,6 @@ h1.subheading {
   padding: 0 0 0 0;
 }
 
-/* @media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-} */
-
 .App-header {
   background-color: #282c34;
   min-height: 10vh;
@@ -115,7 +109,8 @@ h3 {
 input[type="file"]{
   -webkit-appearance: none;
   text-align: left;
-  -webkit-rtl-ordering:  left;
+  /* -webkit-rtl-ordering:  left; */
+  width: 75%;
 }
 
 input[type="file"]::-webkit-file-upload-button{
