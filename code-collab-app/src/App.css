@@ -4,8 +4,6 @@
 
 .App-logo {
   height: 7vmin;
-  /* width: 80hmin; */
-  /* height: auto; */
   pointer-events: none;
   text-align: left;
 }
@@ -81,12 +79,27 @@ h1.subheading {
   background-color: rgba(0,0,0, 0.5);
   z-index: 10;
 }  
+
 .popup_inner {  
   position: fixed;  
   left: 25%;  
   right: 25%;  
   top: 25%;  
   bottom: 25%;  
+  margin: auto;  
+  border-radius: 20px;  
+  background: rgb(185, 184, 184);
+  padding: 10px 10px 10px 10px;
+  text-align: center;
+  z-index: 11;
+}
+
+.popup_new_doc {  
+  position: fixed;  
+  left: 35%;  
+  right: 35%;  
+  top: 35%;  
+  bottom: 35%;  
   margin: auto;  
   border-radius: 20px;  
   background: rgb(185, 184, 184);
@@ -104,6 +117,7 @@ input[type="file"]{
   text-align: left;
   -webkit-rtl-ordering:  left;
 }
+
 input[type="file"]::-webkit-file-upload-button{
   -webkit-appearance: none;
   float: right;
@@ -125,8 +139,12 @@ input[type="file"]::-webkit-file-upload-button:hover {
   background-color: #e6952c;
 }
 
-.button-div {
-  padding-top: 2rem;
+input[type="text"]{
+  position: relative;
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid #e78200;
+  background: transparent;
 }
 
 .input-div {
@@ -134,11 +152,7 @@ input[type="file"]::-webkit-file-upload-button:hover {
   padding-bottom: 3rem;
 }
 
-/* @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-} */
+.input-name {
+  padding-top: 3rem;
+  padding-bottom: 2rem;
+}
