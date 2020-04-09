@@ -4,11 +4,13 @@ import './App.css';
 import { Button, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
+import Popup from './uploadpopup';
 
 class Homepage extends React.Component {
   constructor(props){
     super(props);
     
+    this.state = {showPopup: false};
     props.peer_data.initialize();
   }
 
@@ -23,6 +25,12 @@ class Homepage extends React.Component {
     // TODO: Dynamically set session name (get from user?)
     this.props.peer_data.create_new_session('New Session');
     this.props.history.push({pathname: '/editor'});
+  }
+
+  togglePopup() {
+    this.setState({
+      showPopup: !this.state.showPopup
+    });
   }
 
   renderOneCol(row) {
@@ -89,11 +97,15 @@ class Homepage extends React.Component {
           <span>
             <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
             <Button onClick={() => {this.handleNewSession()}} variant='dark'>New Document</Button>{'  '}
-            {/* TODO: Add upload functionality and redirect to editor page */}
-            <Button variant='dark'>Upload Document</Button>
+            <Button onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
           </span>
         </header>
         <body>
+          <div>
+            {this.state.showPopup ?
+              <Popup peer={this.props.peer_data} history={this.props.history} closePopup={this.togglePopup.bind(this)}/>
+              : null}
+          </div>
           <div className="container">
             <h1 className='subheading'>Active Sessions</h1>
             {this.renderAvailableSessions()}
