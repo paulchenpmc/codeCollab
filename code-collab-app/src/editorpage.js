@@ -23,7 +23,12 @@ class Editorpage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.peer_data.listen_for_req();
+    if(this.props.peer_data.peer === null){
+      this.props.history.push({pathname: '/'});
+    }
+    else {
+      this.props.peer_data.listen_for_req();
+    }
   }
 
   componentWillUnmount() {

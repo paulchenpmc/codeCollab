@@ -8,7 +8,6 @@ import { inject, observer } from 'mobx-react';
 class Homepage extends React.Component {
   constructor(props){
     super(props);
-    
     props.peer_data.initialize();
   }
 
