@@ -233,7 +233,7 @@ const peer_data = observable({
 
     handle_reconnect() {
         console.log('Reconnecting to session...');
-        this.reset(this.current_session_id);
+        this.reset();
         this.join_session(this.current_session, this.current_session_id);
     },
 
