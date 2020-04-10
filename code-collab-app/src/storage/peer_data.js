@@ -69,7 +69,6 @@ const peer_data = observable({
         this.tracker.on('disconnect', () => {
             if (this.tracker !== null) {
                 this.tracker.removeAllListeners();
-                this.tracker = null;
             }
         });
     },
