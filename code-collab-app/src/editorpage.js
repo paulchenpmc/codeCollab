@@ -126,7 +126,7 @@ class Editorpage extends React.Component {
   // e: button click event
   handleDownloadDocumentClick = (e) => {
     e.preventDefault();
-    const cellDivider = '\n--------------------------------------------------------------\n';
+    const cellDivider = '\n//--------------------------------------------------------------\n';
     let documentString = '';
     for (let i = 0; i < this.props.peer_data.doc_data.length; i++) {
       if (i !== 0) {
