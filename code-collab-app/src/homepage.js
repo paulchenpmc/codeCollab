@@ -97,9 +97,9 @@ class Homepage extends React.Component {
       <div className="App">
         <header className="App-header">
           <span>
-            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
-            <Button onClick={this.toggleNamePopup.bind(this)} variant='dark'>New Document</Button>{'  '}
-            <Button onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
+            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>
+            <Button className='header-btn' onClick={this.toggleNamePopup.bind(this)} variant='dark'>New Document</Button>
+            <Button className='header-btn' onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
           </span>
         </header>
         <div className='homepage-body'>
