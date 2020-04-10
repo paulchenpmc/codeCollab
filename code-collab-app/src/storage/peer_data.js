@@ -30,7 +30,8 @@ const peer_data = observable({
     current_cell: null,
     cell_count: 0,
     cell_locked: [],
-    cell_lock_time: null,
+    locked_id: [],
+    random_value: null,
 
     initialize() {
         // will change later, hard coded for now
@@ -50,6 +51,7 @@ const peer_data = observable({
             this.current_session_id = session_info.session_id;
 
             this.cell_locked = Array(session_info.data.length).fill(false);
+            this.locked_id = Array(session_info.data.length).fill('');
             this.doc_data = [...session_info.data];
         });
         //  wait for a list of peers currently in the session
@@ -59,15 +61,14 @@ const peer_data = observable({
             this.request_doc_data();
         });
         this.tracker.on(GET_DOC_RES, data => {
+            console.log('received doc data from tracker');
             this.cell_locked = Array(data.doc.length).fill(false);
+            this.locked_id = Array(data.doc.length).fill('');
             this.doc_data = [...data.doc];
         });
     },
 
-    reset(sessionId){
-        if(sessionId !== null && sessionId === this.current_session_id){
-            return;
-        }
+    reset(){
         console.log('reseting all the values');
         this.session_peers = [];
         this.session_peers_conn = [];
@@ -82,6 +83,7 @@ const peer_data = observable({
         this.current_cell = null;
         this.cell_count = 0;
         this.cell_locked = [];
+        this.locked_id = [];
     },
 
     create_new_session(session_name, data = []) {
@@ -135,30 +137,31 @@ const peer_data = observable({
         if (this.session_peers.length !== 0) {
             //  connect with all peers
             this.session_peers.forEach((peerId, index) => {
-                this.session_peers_conn[index] = this.peer.connect(peerId);
+                const data_connection = this.peer.connect(peerId);
+                this.session_peers_conn[index] = data_connection;
 
-                this.session_peers_conn[index].on('open', () => {
+                data_connection.on('open', () => {
 
                     // ask the first peer for document data
                     if(index === 0){
-                        this.session_peers_conn[index].send({
+                        data_connection.send({
                             message_type: GET_DOC_REQ
                         });
                     }
 
                     // setting up data callback
-                    this.session_peers_conn[index].on('data', data => {
-                        this.handle_data_from_peers(data, this.session_peers_conn[index])
+                    data_connection.on('data', data => {
+                        this.handle_data_from_peers(data, data_connection)
                     });
 
                     // listening to errors on any data connections
-                    this.session_peers_conn[index].on('error', error => {
+                    data_connection.on('error', error => {
                         this.handle_error_from_peers(error);
                     });
 
                     // listening to errors on any data connections
-                    this.session_peers_conn[index].on('close', () => {
-                        this.handle_peer_disconnect(this.session_peers_conn[index]);
+                    data_connection.on('close', () => {
+                        this.handle_peer_disconnect(data_connection);
                     });
                 });
 
@@ -204,6 +207,7 @@ const peer_data = observable({
                 content: {
                     doc_data: [...this.doc_data],
                     cell_locked: [...this.cell_locked],
+                    locked_id: [...this.cell_locked]
                 }
             });
         }
@@ -211,6 +215,7 @@ const peer_data = observable({
         else if(data.message_type && data.message_type === GET_DOC_RES && data.content){
             console.log('received doc data from another peer');
             this.cell_locked.push(...data.content.cell_locked);
+            this.locked_id.push(...data.content.locked_id);
             this.doc_data.push(...data.content.doc_data);
         }
         // Received a cell update
@@ -219,6 +224,7 @@ const peer_data = observable({
                 // if it's a new cell, insert a cell locked value to false
                 if(data.content.index >= this.cell_locked.length){
                     this.cell_locked.push(false);
+                    this.locked_id.push('');
                 }
                 this.doc_data[data.content.index] = data.content.value;
             }
@@ -227,6 +233,7 @@ const peer_data = observable({
         else if(data.message_type && data.message_type === UNLOCK_CELL){
             if(data.content.index >= 0){
                 this.cell_locked[data.content.index] = false;
+                this.locked_id[data.content.index] = '';
             }
         }
         // Received msg to lock a cell
@@ -235,12 +242,17 @@ const peer_data = observable({
                 // we lock if we are not working on anything or we are working on a different cell
                 if(this.current_cell === null || (this.current_cell && this.current_cell !== data.content.index)){
                     this.cell_locked[data.content.index] = true;
+                    this.locked_id[data.content.index] = dataConnection.peer;
                 }
                 // we also lock if we are working on something that the other peer requested first
-                else if(this.current_cell && this.current_cell === data.content.index && this.cell_lock_time > data.content.time){
+                else if(this.current_cell && this.current_cell === data.content.index && this.random_value >= data.content.time){
+                    if (this.random_value === data.content.time && (this.peer_id.localeCompare(dataConnection.peer) < 0)){
+                        return;
+                    }   
                     this.current_cell = null;
-                    this.cell_lock_time = null;
+                    this.random_value = null;
                     this.cell_locked[data.content.index] = true;
+                    this.locked_id[data.content.index] = dataConnection.peer;
                 }
                 // otherwise ignore the request, because we requested this cell first
             }
@@ -257,6 +269,13 @@ const peer_data = observable({
 
     handle_peer_disconnect(data_connection){
         console.log('a peer has been disconnected');
+        // remove any locked cell by this peer
+        if(this.locked_id !== null && this.locked_id.includes(data_connection.peer)){
+            const index = this.locked_id.indexOf(data_connection.peer);
+            this.cell_locked[index] = false;
+            this.locked_id[index] = '';
+        }
+        
         // remove the disconnected peer
         this.session_peers = this.session_peers.filter(peerId => peerId !== data_connection.peer);
         this.session_peers_conn = this.session_peers_conn.filter(conn => conn.peer !== data_connection.peer);
@@ -264,6 +283,7 @@ const peer_data = observable({
 
     add_new_cell(cell_contents){
         this.cell_locked.push(false);
+        this.locked_id.push(false);
         this.doc_data.push(cell_contents);
         this.increment_cell_count();
         this.send_cell_update(this.doc_data.length - 1);
@@ -298,14 +318,14 @@ const peer_data = observable({
     },
 
     update_cell_lock(key, msg_type){
-        this.cell_lock_time = msg_type === LOCK_CELL ? new Date().getTime() : null;
+        this.random_value = msg_type === LOCK_CELL ? Math.floor(100000000 + Math.random() * 900000000) : null;
         if(this.session_peers_conn !== null){
             this.session_peers_conn.forEach(peer_conn => {
                 peer_conn.send({
                     message_type: msg_type, 
                     content: {
                         index: key,
-                        time: this.cell_lock_time
+                        time: this.random_value,
                     }
                 });
             })

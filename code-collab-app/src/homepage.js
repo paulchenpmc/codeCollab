@@ -19,7 +19,6 @@ class Homepage extends React.Component {
   }
 
   handleJoinSession(session_info) {
-    this.props.peer_data.reset(session_info.id);
     this.props.peer_data.join_session(session_info.document_name, session_info.id);
     this.props.history.push({pathname: '/editor'});
   }
