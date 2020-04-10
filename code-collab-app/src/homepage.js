@@ -23,9 +23,9 @@ class Homepage extends React.Component {
     this.props.history.push({pathname: '/editor'});
   }
 
-  renderOneCol(row) {
+  renderOneCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -33,9 +33,9 @@ class Homepage extends React.Component {
     );
   }
 
-  renderTwoCol(row) {
+  renderTwoCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -46,9 +46,9 @@ class Homepage extends React.Component {
     );
   }
 
-  renderThreeCol(row) {
+  renderThreeCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -68,13 +68,13 @@ class Homepage extends React.Component {
     for (let i = 0; i < this.props.peer_data.session_list.length; i += col_num) {
       let row = this.props.peer_data.session_list.slice(i, i + col_num);
       if (row.length === 3) {
-        session_rows.push(this.renderThreeCol(row));
+        session_rows.push(this.renderThreeCol(row, i));
       }
       else if (row.length === 2) {
-        session_rows.push(this.renderTwoCol(row));
+        session_rows.push(this.renderTwoCol(row, i));
       }
       else if (row.length === 1) {
-        session_rows.push(this.renderOneCol(row));
+        session_rows.push(this.renderOneCol(row, i));
       }
     }
     return session_rows;   
