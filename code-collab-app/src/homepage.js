@@ -107,7 +107,6 @@ class Homepage extends React.Component {
             {this.state.showNamePopup ?
               <NamePopup peer={this.props.peer_data} history={this.props.history} closePopup={this.toggleNamePopup.bind(this)}/>
               : null}
-            }
           </div>
           <div>
             {this.state.showPopup ?
