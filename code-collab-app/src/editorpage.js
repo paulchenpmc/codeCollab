@@ -27,6 +27,7 @@ class Editorpage extends React.Component {
   }
 
   componentWillUnmount() {
+    this.props.peer_data.reset();
     this.clearLockTimer(); // Always clean up before unmounting
   }
 
