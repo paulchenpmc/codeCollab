@@ -91,12 +91,12 @@ class Homepage extends React.Component {
             <Button variant='dark'>Upload Document</Button>
           </span>
         </header>
-        <body>
+        <div className='homepage-body'>
           <div className="container">
             <h1 className='subheading'>Active Sessions</h1>
             {this.renderAvailableSessions()}
           </div>
-        </body>
+        </div>
       </div>  
     );
   }

@@ -194,7 +194,7 @@ class Editorpage extends React.Component {
             <Button onClick={this.handleDownloadDocumentClick} variant='dark'>Download Document</Button>{'  '}
           </span>
         </header>
-        <body className="App-editor">
+        <div className="App-editor">
           <div className="box-container">
             {
               this.props.peer_data.doc_data.map((cellContents, index) => (
@@ -206,7 +206,7 @@ class Editorpage extends React.Component {
           <IconButton aria-label="add" onClick={this.handleNewCellButtonClick} style={{width: '5vw', height: '5vw', marginRight: '47.5vw', marginLeft: '47.5vw'}}>
             <AddIcon style={{color: 'white'}}/>
           </IconButton>
-        </body>
+        </div>
       </div>
     );
   }
