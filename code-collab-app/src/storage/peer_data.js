@@ -250,7 +250,10 @@ const peer_data = observable({
                     this.locked_id[data.content.index] = dataConnection.peer;
                 }
                 // we also lock if we are working on something that the other peer requested first
-                else if (this.current_cell && this.current_cell === data.content.index && this.random_value > data.content.time) {
+                else if(this.current_cell && this.current_cell === data.content.index && this.random_value >= data.content.time){
+                    if (this.random_value === data.content.time && (this.peer_id.localeCompare(dataConnection.peer) < 0)){
+                        return;
+                    }   
                     this.current_cell = null;
                     this.random_value = null;
                     this.cell_locked[data.content.index] = true;
@@ -327,7 +330,7 @@ const peer_data = observable({
                     message_type: msg_type,
                     content: {
                         index: key,
-                        time: this.random_value
+                        time: this.random_value,
                     }
                 });
             })
