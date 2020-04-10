@@ -4,11 +4,17 @@ import './App.css';
 import { Button, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
+import Popup from './uploadpopup';
+import NamePopup from './namepopup';
 
 class Homepage extends React.Component {
   constructor(props){
     super(props);
     
+    this.state = {
+      showPopup: false, 
+      showNamePopup: false
+    };
     props.peer_data.initialize();
   }
 
@@ -17,10 +23,16 @@ class Homepage extends React.Component {
     this.props.history.push({pathname: '/editor'});
   }
 
-  handleNewSession() {
-    // TODO: Dynamically set session name (get from user?)
-    this.props.peer_data.create_new_session('New Session');
-    this.props.history.push({pathname: '/editor'});
+  togglePopup() {
+    this.setState({
+      showPopup: !this.state.showPopup
+    });
+  }
+
+  toggleNamePopup() {
+    this.setState({
+      showNamePopup: !this.state.showNamePopup
+    });
   }
 
   renderOneCol(row) {
@@ -86,12 +98,22 @@ class Homepage extends React.Component {
         <header className="App-header">
           <span>
             <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
-            <Button onClick={() => {this.handleNewSession()}} variant='dark'>New Document</Button>{'  '}
-            {/* TODO: Add upload functionality and redirect to editor page */}
-            <Button variant='dark'>Upload Document</Button>
+            <Button onClick={this.toggleNamePopup.bind(this)} variant='dark'>New Document</Button>{'  '}
+            <Button onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
           </span>
         </header>
         <body>
+          <div>
+            {this.state.showNamePopup ?
+              <NamePopup peer={this.props.peer_data} history={this.props.history} closePopup={this.toggleNamePopup.bind(this)}/>
+              : null}
+            }
+          </div>
+          <div>
+            {this.state.showPopup ?
+              <Popup peer={this.props.peer_data} history={this.props.history} closePopup={this.togglePopup.bind(this)}/>
+              : null}
+          </div>
           <div className="container">
             <h1 className='subheading'>Active Sessions</h1>
             {this.renderAvailableSessions()}
