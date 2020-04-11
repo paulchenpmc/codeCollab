@@ -14,7 +14,7 @@ const UNLOCK_CELL = 'unlock_cell';
 const LOCK_CELL = 'lock_cell';
 
 class Editorpage extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props);
 
     this.state = {
@@ -23,7 +23,12 @@ class Editorpage extends React.Component {
   }
 
   componentDidMount() {
-    this.props.peer_data.listen_for_req();
+    if (this.props.peer_data.peer === null) {
+      this.props.history.push({ pathname: '/' });
+    }
+    else {
+      this.props.peer_data.listen_for_req();
+    }
   }
 
   componentWillUnmount() {
@@ -54,7 +59,7 @@ class Editorpage extends React.Component {
     this.props.peer_data.current_cell = null;
 
     // unlock the cell
-    this.props.peer_data.update_cell_lock(key, UNLOCK_CELL);    
+    this.props.peer_data.update_cell_lock(key, UNLOCK_CELL);
   }
 
   startLockTimer = () => {
@@ -67,14 +72,14 @@ class Editorpage extends React.Component {
         // Force blur event on cell (remove cursor from cell)
         document.activeElement.blur();
       },
-    10*1000); // 10 Second timeout for cell lock release
+      10 * 1000); // 10 Second timeout for cell lock release
     if (this.state.lockTimeoutID !== null) this.clearLockTimer();
-    this.setState({ lockTimeoutID:timeoutID });
+    this.setState({ lockTimeoutID: timeoutID });
   }
 
   clearLockTimer = () => {
     window.clearTimeout(this.state.lockTimeoutID);
-    this.setState({ lockTimeoutID:null });
+    this.setState({ lockTimeoutID: null });
   }
 
   // Event handler for cursor entering a cell. Requests a lock on the cell from all peers.
@@ -82,7 +87,7 @@ class Editorpage extends React.Component {
   // key: index of cell
   selectCellEvent = (e, key) => {
     e.preventDefault();
-    
+
     // Request lock on cell from all peers
     this.props.peer_data.update_cell_lock(key, LOCK_CELL);
 
@@ -121,7 +126,7 @@ class Editorpage extends React.Component {
   // e: button click event
   handleDownloadDocumentClick = (e) => {
     e.preventDefault();
-    const cellDivider = '\n--------------------------------------------------------------\n';
+    const cellDivider = '\n//--------------------------------------------------------------\n';
     let documentString = '';
     for (let i = 0; i < this.props.peer_data.doc_data.length; i++) {
       if (i !== 0) {
@@ -129,14 +134,14 @@ class Editorpage extends React.Component {
       }
       documentString += this.props.peer_data.doc_data[i];
     }
-    var blob = new Blob([documentString], {type: "text/plain;charset=utf-8"});
+    var blob = new Blob([documentString], { type: "text/plain;charset=utf-8" });
     saveAs(blob, "codeCollabDocument.txt"); // Opens file dialog on client with this as default filename
   }
 
   // Creates html for new editor cell.
   // cellContents: Optional arg for the text contents of that editor cell
   renderTextbox = (keyvalue) => {
-    if (typeof(keyvalue) !== 'number') {
+    if (typeof (keyvalue) !== 'number') {
       return;
     }
 
@@ -182,31 +187,30 @@ class Editorpage extends React.Component {
           this.startLockTimer();
         }}
       />
-      );
+    );
   }
 
   render() {
-    return(
+    return (
       <div className="App">
         <header className="App-header">
-          <span>
-            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
-            <Button onClick={this.handleDownloadDocumentClick} variant='dark'>Download Document</Button>{'  '}
-          </span>
+          <Link to='/'><img src={logo} className="App-logo" alt="logo" /></Link>
+          <Button className='header-btn' onClick={this.handleDownloadDocumentClick} variant='dark'>Download Document</Button>
+          <h3 className='doc-title'>{this.props.peer_data.current_session}</h3>
         </header>
-        <body className="App-editor">
+        <div className="App-editor">
           <div className="box-container">
             {
               this.props.peer_data.doc_data.map((cellContents, index) => (
                 <React.Fragment key={index}>
-                  { this.renderTextbox(index, cellContents) }
+                  {this.renderTextbox(index, cellContents)}
                 </React.Fragment>))
             }
           </div>
-          <IconButton aria-label="add" onClick={this.handleNewCellButtonClick} style={{width: '5vw', height: '5vw', marginRight: '47.5vw', marginLeft: '47.5vw'}}>
-            <AddIcon style={{color: 'white'}}/>
+          <IconButton aria-label="add" onClick={this.handleNewCellButtonClick} style={{ width: '5vw', height: '5vw', marginRight: '47.5vw', marginLeft: '47.5vw' }}>
+            <AddIcon style={{ color: 'white' }} />
           </IconButton>
-        </body>
+        </div>
       </div>
     );
   }

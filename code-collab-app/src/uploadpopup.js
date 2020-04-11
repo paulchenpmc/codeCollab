@@ -1,6 +1,6 @@
 import React from 'react';  
 import './App.css';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { inject, observer } from 'mobx-react';
 
 class Popup extends React.Component {
@@ -19,7 +19,7 @@ class Popup extends React.Component {
   };
 
   handleFileRead = (e) => {
-    let divider = "\n--------------------------------------------------------------\n";
+    let divider = "\n//--------------------------------------------------------------\n";
     let file_content = this.file_reader.result.split(divider);
     let data = [];
     for(let i = 0; i < file_content.length; i++) {

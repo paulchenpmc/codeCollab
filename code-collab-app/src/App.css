@@ -34,11 +34,23 @@ h1.subheading {
   background-color: #282c34;
   min-height: 10vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   text-align: left;
-  justify-content: center;
+  align-items: center;
   font-size: calc(10px + 2vmin);
   color: white;
+}
+
+button.header-btn {
+  margin: 0 0.75rem;
+}
+
+.doc-title {
+    display: flex;
+    text-align: center;
+    color: white;
+    margin: 0;
+    padding-left: 1rem;
 }
 
 .App-editor {

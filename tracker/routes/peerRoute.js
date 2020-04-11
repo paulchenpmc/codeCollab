@@ -2,11 +2,22 @@ const { generateId, writeToFile, readDataFiles } = require('../utils');
 
 // Loaded from disk
 let sessions = {};
+let sessionsModified = {};
+const BACKUP_INTERVAL = 10000; // every 10 seconds
 
 const loadSessions = async () => {
     console.log('\nInitializing tracker sessions from disk...');
     sessions = await readDataFiles();
-    console.log('Tracker documents loaded.\n')
+    console.log('Tracker documents loaded.\n');
+
+    // Periodically backup the sessions that have been changed to disk
+    setInterval(() => {
+        for(const id of Object.keys(sessionsModified)){
+            console.log('Backup: ' + id);
+            writeToFile(id, sessions[id]);
+            delete sessionsModified[id];
+        }
+    }, BACKUP_INTERVAL);
 }
 
 const addSession = (document_name, peer, doc_data) => {
@@ -19,7 +30,7 @@ const addSession = (document_name, peer, doc_data) => {
         peers: [peer],
         data: doc_data
     }
-    writeToFile(sessionID, sessions[sessionID]);
+    sessionsModified[sessionID] = true;
     return sessions[sessionID];
 }
 
@@ -31,7 +42,7 @@ const saveSession = (sessionID, data) => {
         return;
     }
     sessions[sessionID].data = data;
-    writeToFile(sessionID, sessions[sessionID]);
+    sessionsModified[sessionID] = true;
 }
 
 const addPeer = (sessionID, newPeer) => {
@@ -44,18 +55,18 @@ const addPeer = (sessionID, newPeer) => {
     sessions[sessionID].peers.push(newPeer);
 
     // persisting the change to the disk
-    writeToFile(sessionID, sessions[sessionID]);
+    sessionsModified[sessionID] = true;
     return sessions[sessionID].peers;
 }
 
 const removePeer = (peerId) => {
     // Iterate over the sessions and find out which session the peer is in and remove the peer from that
-    for(sessionId in sessions){
-        if(sessions[sessionId].peers.includes(peerId)){
-            sessions[sessionId].peers = sessions[sessionId].peers.filter(peer => peerId !== peer);
+    for(sessionID in sessions){
+        if(sessions[sessionID].peers.includes(peerId)){
+            sessions[sessionID].peers = sessions[sessionID].peers.filter(peer => peerId !== peer);
             
             // persisting the change to the disk
-            writeToFile(sessionId, sessions[sessionId]);
+            sessionsModified[sessionID] = true;
             break;
         }
     }
@@ -87,7 +98,7 @@ const getDocument = (sessionID) => {
 
 const updateSessionData = (sessionID, index, value) => {
     sessions[sessionID].data[index] = value;
-    writeToFile(sessionID, sessions[sessionID]);
+    sessionsModified[sessionID] = true;
 }
 
 module.exports = {

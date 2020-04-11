@@ -35,9 +35,9 @@ class Homepage extends React.Component {
     });
   }
 
-  renderOneCol(row) {
+  renderOneCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -45,9 +45,9 @@ class Homepage extends React.Component {
     );
   }
 
-  renderTwoCol(row) {
+  renderTwoCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -58,9 +58,9 @@ class Homepage extends React.Component {
     );
   }
 
-  renderThreeCol(row) {
+  renderThreeCol(row, index) {
     return (
-      <div className="row">
+      <div className="row" key={'row-' + index}>
         <div className="col-sm">
           <ListGroup.Item action onClick={() => {this.handleJoinSession(row[0])}} className="doc">{row[0].document_name}</ListGroup.Item>
         </div>
@@ -80,13 +80,13 @@ class Homepage extends React.Component {
     for (let i = 0; i < this.props.peer_data.session_list.length; i += col_num) {
       let row = this.props.peer_data.session_list.slice(i, i + col_num);
       if (row.length === 3) {
-        session_rows.push(this.renderThreeCol(row));
+        session_rows.push(this.renderThreeCol(row, i));
       }
       else if (row.length === 2) {
-        session_rows.push(this.renderTwoCol(row));
+        session_rows.push(this.renderTwoCol(row, i));
       }
       else if (row.length === 1) {
-        session_rows.push(this.renderOneCol(row));
+        session_rows.push(this.renderOneCol(row, i));
       }
     }
     return session_rows;   
@@ -97,12 +97,12 @@ class Homepage extends React.Component {
       <div className="App">
         <header className="App-header">
           <span>
-            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>{'  '}
-            <Button onClick={this.toggleNamePopup.bind(this)} variant='dark'>New Document</Button>{'  '}
-            <Button onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
+            <Link to='/'><img src={logo} className="App-logo" alt="logo"/></Link>
+            <Button className='header-btn' onClick={this.toggleNamePopup.bind(this)} variant='dark'>New Document</Button>
+            <Button className='header-btn' onClick={this.togglePopup.bind(this)} variant='dark'>Upload</Button>
           </span>
         </header>
-        <body>
+        <div className='homepage-body'>
           <div>
             {this.state.showNamePopup ?
               <NamePopup peer={this.props.peer_data} history={this.props.history} closePopup={this.toggleNamePopup.bind(this)}/>
@@ -117,7 +117,7 @@ class Homepage extends React.Component {
             <h1 className='subheading'>Active Sessions</h1>
             {this.renderAvailableSessions()}
           </div>
-        </body>
+        </div>
       </div>  
     );
   }
