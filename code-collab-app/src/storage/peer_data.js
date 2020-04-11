@@ -7,6 +7,8 @@ const GET_DOC_RES = 'get_doc_res';
 const CELL_UPDATE = 'cell_update';
 const UNLOCK_CELL = 'unlock_cell';
 const LOCK_CELL = 'lock_cell';
+const YOU_THERE = 'you_there';
+const IM_HERE = 'im_here';
 
 // Tracker server config for peerjs
 const config = {
@@ -32,6 +34,10 @@ const peer_data = observable({
     cell_locked: [],
     locked_id: [],
     random_value: null,
+
+    // Used to check for omission failures
+    updateTimer: null,
+    responseTimer: null,
 
     initialize() {
         // will change later, hard coded for now
@@ -154,6 +160,12 @@ const peer_data = observable({
                         });
                     }
 
+                    clearTimeout(this.updateTimer);
+                    if (window.location.href.includes('/editor')) {
+                        console.log('Setting update timer to 5 mins');
+                        this.updateTimer = setTimeout(() => this.handle_no_updates(), 300000);
+                    }
+
                     // setting up data callback
                     data_connection.on('data', data => {
                         this.handle_data_from_peers(data, data_connection)
@@ -187,6 +199,13 @@ const peer_data = observable({
                 this.session_peers.push(dataConnection.peer);
                 this.session_peers_conn.push(dataConnection);
 
+                // If no updates has been received for 5 mins
+                clearTimeout(this.updateTimer);
+                if (window.location.href.includes('/editor')) {
+                    console.log('Setting update timer to 5 mins');
+                    this.updateTimer = setTimeout(() => this.handle_no_updates(), 300000);
+                }
+
                 dataConnection.on('error', error => {
                     this.handle_error_from_peers(error);
                 });
@@ -201,6 +220,29 @@ const peer_data = observable({
                 });
             });
         });
+    },
+
+    // Broadcast to other peers, asking if they are there
+    handle_no_updates() {
+        console.log('No updates received for over 5 minutes, broadcasting message...');
+        if (this.session_peers_conn !== null) {
+            this.session_peers_conn.forEach(peer_conn => {
+                peer_conn.send({
+                    message_type: YOU_THERE
+                });
+            });
+        };
+        clearTimeout(this.responseTimer);
+        if (window.location.href.includes('/editor')) {
+            console.log('Setting response timer to 2 mins');
+            this.responseTimer = setTimeout(() => this.handle_reconnect(), 120000);
+        }
+    },
+
+    handle_reconnect() {
+        console.log('Reconnecting to session...');
+        this.reset();
+        this.join_session(this.current_session, this.current_session_id);
     },
 
     handle_data_from_peers(data, dataConnection) {
@@ -250,10 +292,10 @@ const peer_data = observable({
                     this.locked_id[data.content.index] = dataConnection.peer;
                 }
                 // we also lock if we are working on something that the other peer requested first
-                else if(this.current_cell && this.current_cell === data.content.index && this.random_value >= data.content.time){
-                    if (this.random_value === data.content.time && (this.peer_id.localeCompare(dataConnection.peer) < 0)){
+                else if (this.current_cell && this.current_cell === data.content.index && this.random_value >= data.content.time) {
+                    if (this.random_value === data.content.time && (this.peer_id.localeCompare(dataConnection.peer) < 0)) {
                         return;
-                    }   
+                    }
                     this.current_cell = null;
                     this.random_value = null;
                     this.cell_locked[data.content.index] = true;
@@ -262,9 +304,24 @@ const peer_data = observable({
                 // otherwise ignore the request, because we requested this cell first
             }
         }
+        else if (data.message_type && data.message_type === YOU_THERE) {
+            dataConnection.send({
+                message_type: IM_HERE
+            });
+        }
+        else if (data.message_type && data.message_type === IM_HERE) {
+            // Received message from another peer, no omission failure occurred
+            clearTimeout(this.responseTimer);
+        }
         else {
             // TODO -- do something more with this data
             console.log(data);
+        }
+
+        clearTimeout(this.updateTimer);
+        if (window.location.href.includes('/editor')) {
+            console.log('Received message, resetting update timer to 5 mins');
+            this.updateTimer = setTimeout(() => this.handle_no_updates(), 300000);
         }
     },
 
