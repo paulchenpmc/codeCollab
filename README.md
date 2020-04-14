@@ -1,5 +1,17 @@
 # codeCollab
+#### Installation Instructions
+1. Clone repository
+2. Ensure you have [yarn](https://classic.yarnpkg.com/en/docs/install) installed
+3. In the directory `codeCollab/code-collab-app` run `yarn install`
+4. In the directory `codeCollab/tracker` run `yarn install`
 
+#### To Run
+1. In the directory `codeCollab/code-collab-app` run `yarn start`
+2. In the directory `codeCollab/tracker` run `yarn start`
+3. Connect to `http://localhost:3000/` in your browser
+4. Use the application!
+
+## Peer Communication Protocol
 ### Establish connection with tracker
 **Description:**
 **Event: `connecting to tracker`**
